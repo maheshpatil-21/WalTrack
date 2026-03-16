@@ -1,0 +1,215 @@
+{
+  "project_name": "Waltrack",
+  "app_type": "Expo React Native Mobile App",
+  "design_philosophy": {
+    "identity": "The Performance Pro (Student Edition)",
+    "core_principles": [
+      "Speed over Decoration: Students need to log expenses in <3 seconds.",
+      "Green is Growth: Use Green (#10B981) for positive reinforcement (Budget left), not just currency.",
+      "White Space is Luxury: Use generous padding (p-6, p-8) to make the app feel expensive even if the student is broke.",
+      "Data needs Breathing Room: Don't cram charts. One chart per view."
+    ],
+    "anti_patterns": [
+      "No Dark Mode by default (User requested Clean White).",
+      "No Complex gradients (Keep it flat or subtle).",
+      "No 'Inter' for Headings (Use 'DM Sans' or System Bold).",
+      "No generic 'List' views without icons."
+    ]
+  },
+  "tech_stack_constraints": {
+    "framework": "Expo React Native",
+    "styling": "StyleSheet with Design System Constants (or NativeWind if configured)",
+    "icons": "@expo/vector-icons (MaterialCommunityIcons, Ionicons)",
+    "charts": "react-native-gifted-charts",
+    "fonts": "expo-font (DM Sans, JetBrains Mono)"
+  },
+  "design_system": {
+    "colors": {
+      "primary": {
+        "DEFAULT": "#10B981",
+        "dark": "#059669",
+        "light": "#34D399",
+        "bg": "#ECFDF5"
+      },
+      "secondary": {
+        "DEFAULT": "#111827",
+        "gray": "#6B7280",
+        "lightGray": "#F3F4F6",
+        "border": "#E5E7EB"
+      },
+      "background": "#FFFFFF",
+      "surface": "#FAFAFA",
+      "danger": "#EF4444",
+      "warning": "#F59E0B",
+      "text": {
+        "primary": "#111827",
+        "secondary": "#6B7280",
+        "tertiary": "#9CA3AF",
+        "inverse": "#FFFFFF"
+      }
+    },
+    "spacing": {
+      "s1": 4,
+      "s2": 8,
+      "s3": 12,
+      "s4": 16,
+      "s6": 24,
+      "s8": 32,
+      "s12": 48
+    },
+    "typography": {
+      "headings": {
+        "h1": { "fontSize": 32, "fontWeight": "700", "lineHeight": 40, "letterSpacing": -0.5 },
+        "h2": { "fontSize": 24, "fontWeight": "700", "lineHeight": 32, "letterSpacing": -0.3 },
+        "h3": { "fontSize": 20, "fontWeight": "600", "lineHeight": 28 },
+        "amount": { "fontSize": 40, "fontWeight": "800", "letterSpacing": -1 }
+      },
+      "body": {
+        "base": { "fontSize": 16, "lineHeight": 24 },
+        "sm": { "fontSize": 14, "lineHeight": 20 },
+        "xs": { "fontSize": 12, "lineHeight": 16 }
+      }
+    },
+    "borderRadius": {
+      "sm": 8,
+      "md": 12,
+      "lg": 16,
+      "xl": 24,
+      "full": 9999
+    },
+    "shadows": {
+      "soft": {
+        "shadowColor": "#000",
+        "shadowOffset": { "width": 0, "height": 2 },
+        "shadowOpacity": 0.05,
+        "shadowRadius": 10,
+        "elevation": 2
+      },
+      "card": {
+        "shadowColor": "#000",
+        "shadowOffset": { "width": 0, "height": 4 },
+        "shadowOpacity": 0.1,
+        "shadowRadius": 12,
+        "elevation": 4
+      }
+    }
+  },
+  "assets": {
+    "icons": {
+      "library": "MaterialCommunityIcons",
+      "mapping": {
+        "Food": "food-apple-outline",
+        "Travel": "airplane",
+        "Shopping": "shopping-outline",
+        "Entertainment": "movie-open-outline",
+        "Others": "dots-horizontal-circle-outline",
+        "Home": "home-variant-outline",
+        "Add": "plus-circle",
+        "Transactions": "format-list-bulleted",
+        "Insights": "chart-box-outline",
+        "Budget": "wallet-outline",
+        "Delete": "trash-can-outline",
+        "Edit": "pencil-outline"
+      }
+    },
+    "images": {
+      "logo": "Use a simple Text Logo 'Waltrack' with a Green Dot '.' at the end.",
+      "empty_state": "Use a large gray icon (e.g., 'wallet-outline' size 80) with opacity 0.3."
+    }
+  },
+  "screens": {
+    "Dashboard": {
+      "layout": "Bento Grid (Vertical Scroll)",
+      "components": [
+        {
+          "name": "Header",
+          "style": "Flex Row, Space Between",
+          "content": "Greeting + User Avatar (placeholder)"
+        },
+        {
+          "name": "Balance Card",
+          "style": "Full Width, Green Gradient or Solid Primary, Rounded XL",
+          "content": "Total Balance (Large Text), Monthly Budget Label"
+        },
+        {
+          "name": "Daily Progress",
+          "style": "Card, White BG",
+          "content": "Progress Bar (Green filled), 'Spent today: $X / Daily Limit'"
+        },
+        {
+          "name": "Category Breakdown",
+          "style": "Card, White BG",
+          "content": "Pie Chart (Donut style) with Legend"
+        }
+      ]
+    },
+    "AddExpense": {
+      "layout": "Focus Mode (Minimal)",
+      "components": [
+        {
+          "name": "Amount Input",
+          "style": "Massive Text (64px), Center Aligned, Auto Focus",
+          "behavior": "Numeric Keyboard"
+        },
+        {
+          "name": "Category Grid",
+          "style": "3 Columns, Icon + Label, Selectable (Green Border)"
+        },
+        {
+          "name": "Note Input",
+          "style": "Simple Underline Input"
+        },
+        {
+          "name": "Submit Button",
+          "style": "Floating Bottom or Fixed Bottom, Full Width, Green"
+        }
+      ]
+    },
+    "Transactions": {
+      "layout": "List View",
+      "components": [
+        {
+          "name": "Filter Tabs",
+          "style": "Segmented Control (All, Income, Expense)"
+        },
+        {
+          "name": "Transaction List",
+          "style": "Grouped by Date (Today, Yesterday)",
+          "item_style": "Row: Icon (Left) + Title/Note (Mid) + Amount (Right, Red/Green)"
+        }
+      ]
+    },
+    "Insights": {
+      "layout": "Scrollable Analytics",
+      "components": [
+        {
+          "name": "Weekly Spend Chart",
+          "style": "Bar Chart, Last 7 Days"
+        },
+        {
+          "name": "Spending Trend",
+          "style": "Line Chart (Bezier), Monthly Trend"
+        },
+        {
+          "name": "Highest Spend Day",
+          "style": "Stat Card"
+        }
+      ]
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Install 'react-native-gifted-charts' and 'nativewind' (if possible) or use the Design System constants provided.",
+    "2. NAVIGATION: Use Expo Router (app/ directory). Create tabs in 'app/(tabs)' and stack for modals.",
+    "3. STATE: Use 'AsyncStorage' for local data persistence. Create a simple 'TransactionContext' or Hook.",
+    "4. COMPONENTS: Create reusable 'Card', 'Button', 'Typography' components wrapped in safe areas.",
+    "5. STYLING: Apply the 'clean white' theme. Avoid dark backgrounds unless it's a specific 'dark mode' toggle (not MVP).",
+    "6. ACCESSIBILITY: Add 'accessibilityLabel' to all buttons and inputs. Use proper contrast (Green text on White bg is tricky, check contrast - use Dark Green for text).",
+    "7. DATA-TESTID: Add 'testID' prop to all interactive elements for testing."
+  ],
+  "universal_guidelines": [
+    "Do not use gradients for text.",
+    "Use 'SafeAreaView' for all screens.",
+    "Use 'KeyboardAvoidingView' for forms.",
+    "Ensure touch targets are at least 44x44 points."
+  ]
+}
