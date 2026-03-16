@@ -205,8 +205,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing.s1,
   },
   currencyChip: {
-    minHeight: 36,
-    minWidth: 48,
+    minHeight: 44,
+    minWidth: 56,
     borderRadius: theme.radius.full,
     justifyContent: 'center',
     alignItems: 'center',

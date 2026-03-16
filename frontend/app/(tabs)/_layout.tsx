@@ -28,6 +28,7 @@ export default function TabsLayout() {
         name="dashboard"
         options={{
           title: 'Dashboard',
+          tabBarButtonTestID: 'tab-dashboard',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home-variant-outline" color={color} size={size} />
           ),
@@ -37,6 +38,7 @@ export default function TabsLayout() {
         name="add-expense"
         options={{
           title: 'Add Expense',
+          tabBarButtonTestID: 'tab-add-expense',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="plus-circle" color={color} size={size} />
           ),
@@ -46,6 +48,7 @@ export default function TabsLayout() {
         name="transactions"
         options={{
           title: 'Transactions',
+          tabBarButtonTestID: 'tab-transactions',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="format-list-bulleted" color={color} size={size} />
           ),
@@ -55,6 +58,7 @@ export default function TabsLayout() {
         name="insights"
         options={{
           title: 'Insights',
+          tabBarButtonTestID: 'tab-insights',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="chart-box-outline" color={color} size={size} />
           ),

@@ -36,6 +36,15 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<ExpenseStoreState>(initialState);
   const [isReady, setIsReady] = useState(false);
 
+  const runStateUpdate = async (updater: (prev: ExpenseStoreState) => ExpenseStoreState) => {
+    let nextState = state;
+    setState((prev) => {
+      nextState = updater(prev);
+      return nextState;
+    });
+    await writeState(nextState);
+  };
+
   useEffect(() => {
     const loadStore = async () => {
       try {
@@ -67,15 +76,13 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
       date: new Date().toISOString(),
     };
 
-    const nextState = { ...state, expenses: [expense, ...state.expenses] };
-    setState(nextState);
-    await writeState(nextState);
+    await runStateUpdate((prev) => ({ ...prev, expenses: [expense, ...prev.expenses] }));
   };
 
   const updateExpense = async (id: string, nextExpense: NewExpense) => {
-    const nextState = {
-      ...state,
-      expenses: state.expenses.map((expense) => {
+    await runStateUpdate((prev) => ({
+      ...prev,
+      expenses: prev.expenses.map((expense) => {
         if (expense.id !== id) {
           return expense;
         }
@@ -86,30 +93,22 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
           note: nextExpense.note,
         };
       }),
-    };
-    setState(nextState);
-    await writeState(nextState);
+    }));
   };
 
   const deleteExpense = async (id: string) => {
-    const nextState = {
-      ...state,
-      expenses: state.expenses.filter((expense) => expense.id !== id),
-    };
-    setState(nextState);
-    await writeState(nextState);
+    await runStateUpdate((prev) => ({
+      ...prev,
+      expenses: prev.expenses.filter((expense) => expense.id !== id),
+    }));
   };
 
   const setMonthlyBudget = async (budget: number) => {
-    const nextState = { ...state, monthlyBudget: budget };
-    setState(nextState);
-    await writeState(nextState);
+    await runStateUpdate((prev) => ({ ...prev, monthlyBudget: budget }));
   };
 
   const setCurrencyValue = async (currency: Currency) => {
-    const nextState = { ...state, currency };
-    setState(nextState);
-    await writeState(nextState);
+    await runStateUpdate((prev) => ({ ...prev, currency }));
   };
 
   const value = useMemo(

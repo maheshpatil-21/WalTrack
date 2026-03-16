@@ -6,6 +6,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -128,88 +129,98 @@ export default function TransactionsScreen() {
 
       <Modal visible={!!editForm} transparent animationType="slide" onRequestClose={() => setEditForm(null)}>
         <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalKeyboardWrap}
+          >
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Edit expense</Text>
-              <TextInput
-                testID="edit-amount-input"
-                accessibilityLabel="Edit expense amount"
-                value={editForm?.amountInput ?? ''}
-                keyboardType="numeric"
-                onChangeText={(value) =>
-                  setEditForm((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          amountInput: value.replace(/[^0-9.]/g, ''),
-                        }
-                      : null
-                  )
-                }
-                style={styles.modalInput}
-              />
-
-              <View style={styles.categoryGrid}>
-                {CATEGORY_OPTIONS.map((item) => {
-                  const active = editForm?.category === item;
-                  return (
-                    <Pressable
-                      key={item}
-                      testID={`edit-category-${item}`}
-                      accessibilityLabel={`Set category to ${item}`}
-                      onPress={() =>
-                        setEditForm((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                category: item,
-                              }
-                            : null
-                        )
-                      }
-                      style={[styles.categoryChip, active && styles.categoryChipActive]}
-                    >
-                      <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>{item}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <TextInput
-                testID="edit-note-input"
-                accessibilityLabel="Edit expense note"
-                value={editForm?.note ?? ''}
-                onChangeText={(value) =>
-                  setEditForm((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          note: value,
-                        }
-                      : null
-                  )
-                }
-                placeholder="Note"
-                placeholderTextColor={theme.colors.text.tertiary}
-                style={styles.modalInput}
-              />
-
-              <View style={styles.modalActions}>
-                <ScaleButton
-                  label="Cancel"
-                  onPress={() => setEditForm(null)}
-                  style={styles.modalButton}
-                  testID="cancel-edit-expense"
-                  accessibilityLabel="Cancel editing expense"
+              <ScrollView
+                style={styles.modalScroll}
+                contentContainerStyle={styles.modalScrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={styles.modalTitle}>Edit expense</Text>
+                <TextInput
+                  testID="edit-amount-input"
+                  accessibilityLabel="Edit expense amount"
+                  value={editForm?.amountInput ?? ''}
+                  keyboardType="numeric"
+                  onChangeText={(value) =>
+                    setEditForm((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            amountInput: value.replace(/[^0-9.]/g, ''),
+                          }
+                        : null
+                    )
+                  }
+                  style={styles.modalInput}
                 />
-                <ScaleButton
-                  label="Save"
-                  onPress={saveEdit}
-                  style={styles.modalButton}
-                  testID="save-edit-expense"
-                  accessibilityLabel="Save edited expense"
+
+                <View style={styles.categoryGrid}>
+                  {CATEGORY_OPTIONS.map((item) => {
+                    const active = editForm?.category === item;
+                    return (
+                      <Pressable
+                        key={item}
+                        testID={`edit-category-${item}`}
+                        accessibilityLabel={`Set category to ${item}`}
+                        onPress={() =>
+                          setEditForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  category: item,
+                                }
+                              : null
+                          )
+                        }
+                        style={[styles.categoryChip, active && styles.categoryChipActive]}
+                      >
+                        <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>{item}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <TextInput
+                  testID="edit-note-input"
+                  accessibilityLabel="Edit expense note"
+                  value={editForm?.note ?? ''}
+                  onChangeText={(value) =>
+                    setEditForm((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            note: value,
+                          }
+                        : null
+                    )
+                  }
+                  placeholder="Note"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  style={styles.modalInput}
                 />
-              </View>
+
+                <View style={styles.modalActions}>
+                  <ScaleButton
+                    label="Cancel"
+                    onPress={() => setEditForm(null)}
+                    style={styles.modalButton}
+                    testID="cancel-edit-expense"
+                    accessibilityLabel="Cancel editing expense"
+                  />
+                  <ScaleButton
+                    label="Save"
+                    onPress={saveEdit}
+                    style={styles.modalButton}
+                    testID="save-edit-expense"
+                    accessibilityLabel="Save edited expense"
+                  />
+                </View>
+              </ScrollView>
             </View>
           </KeyboardAvoidingView>
         </View>
@@ -291,8 +302,8 @@ const styles = StyleSheet.create({
     gap: theme.spacing.s2,
   },
   iconButton: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     borderRadius: theme.radius.full,
     borderWidth: 1,
     borderColor: theme.colors.secondary.border,
@@ -320,13 +331,22 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(17,24,39,0.35)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     padding: theme.spacing.s4,
+  },
+  modalKeyboardWrap: {
+    width: '100%',
   },
   modalCard: {
     borderRadius: theme.radius.xl,
     backgroundColor: theme.colors.background,
+    maxHeight: '88%',
     padding: theme.spacing.s4,
+  },
+  modalScroll: {
+    maxHeight: '100%',
+  },
+  modalScrollContent: {
     gap: theme.spacing.s3,
   },
   modalTitle: {
