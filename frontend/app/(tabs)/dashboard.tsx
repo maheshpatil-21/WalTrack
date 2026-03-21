@@ -3,6 +3,8 @@ import { PieChart } from 'react-native-gifted-charts';
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -22,17 +24,28 @@ import {
 } from '../../utils/expenseAnalytics';
 
 export default function DashboardScreen() {
-  const { expenses, monthlyBudget, currency, setMonthlyBudget, setCurrency, isReady } = useExpenseStore();
+  const {
+    expenses,
+    monthlyBudget,
+    dailyLimit,
+    currency,
+    setMonthlyBudget,
+    setDailyLimit,
+    setCurrency,
+    isReady,
+  } = useExpenseStore();
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState(String(monthlyBudget));
+  const [isDailyLimitModalVisible, setIsDailyLimitModalVisible] = useState(false);
+  const [dailyLimitInput, setDailyLimitInput] = useState(String(Math.round(dailyLimit)));
+  const [dailyLimitError, setDailyLimitError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const monthlySpending = useMemo(() => getMonthlySpending(expenses), [expenses]);
   const todaySpending = useMemo(() => getTodaySpending(expenses), [expenses]);
   const categoryData = useMemo(() => getCategoryBreakdown(expenses), [expenses]);
 
   const remainingBalance = Math.max(monthlyBudget - monthlySpending, 0);
-  const now = new Date();
-  const dailyLimit = monthlyBudget / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const dailyProgress = Math.min(todaySpending / Math.max(dailyLimit, 1), 1);
 
   const saveBudget = async () => {
@@ -42,6 +55,28 @@ export default function DashboardScreen() {
     }
     await setMonthlyBudget(nextBudget);
     setIsEditingBudget(false);
+  };
+
+  const openDailyLimitModal = () => {
+    setDailyLimitInput(String(Math.round(dailyLimit)));
+    setDailyLimitError('');
+    setIsDailyLimitModalVisible(true);
+  };
+
+  const saveDailyLimit = async () => {
+    const nextLimit = Number(dailyLimitInput);
+    if (!dailyLimitInput.trim() || Number.isNaN(nextLimit) || nextLimit <= 0) {
+      setDailyLimitError('Please enter a valid daily limit');
+      return;
+    }
+
+    await setDailyLimit(nextLimit);
+    setSuccessMessage('Daily limit updated successfully');
+    setIsDailyLimitModalVisible(false);
+    setDailyLimitError('');
+    setTimeout(() => {
+      setSuccessMessage('');
+    }, 2200);
   };
 
   if (!isReady) {
@@ -129,9 +164,24 @@ export default function DashboardScreen() {
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${dailyProgress * 100}%` }]} />
         </View>
-        <Text style={styles.progressCaption}>
-          {formatCurrency(todaySpending, currency)} / {formatCurrency(dailyLimit, currency)} daily limit
-        </Text>
+        <View style={styles.dailyLimitRow}>
+          <Text style={styles.progressCaption}>
+            {formatCurrency(todaySpending, currency)} / {formatCurrency(dailyLimit, currency)} daily limit
+          </Text>
+          <Pressable
+            testID="edit-daily-limit-button"
+            accessibilityLabel="Edit daily limit"
+            onPress={openDailyLimitModal}
+            style={styles.dailyLimitEditButton}
+          >
+            <MaterialCommunityIcons name="pencil-outline" size={14} color={theme.colors.text.secondary} />
+          </Pressable>
+        </View>
+        {!!successMessage && (
+          <View style={styles.successToast}>
+            <Text style={styles.successToastText}>{successMessage}</Text>
+          </View>
+        )}
       </WaltrackCard>
 
       <WaltrackCard style={styles.chartCard}>
@@ -170,6 +220,51 @@ export default function DashboardScreen() {
           </>
         )}
       </WaltrackCard>
+
+      <Modal
+        visible={isDailyLimitModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsDailyLimitModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Edit Daily Limit</Text>
+            <Text style={styles.modalLabel}>Enter new daily limit</Text>
+            <TextInput
+              testID="daily-limit-input"
+              accessibilityLabel="Enter new daily limit"
+              value={dailyLimitInput}
+              onChangeText={(value) => {
+                setDailyLimitError('');
+                setDailyLimitInput(value.replace(/[^0-9.]/g, ''));
+              }}
+              keyboardType="numeric"
+              style={styles.modalInput}
+              placeholder={Platform.OS === 'ios' ? '0' : undefined}
+            />
+            {!!dailyLimitError && <Text style={styles.modalError}>{dailyLimitError}</Text>}
+            <View style={styles.modalActions}>
+              <Pressable
+                testID="cancel-daily-limit-button"
+                accessibilityLabel="Cancel daily limit edit"
+                onPress={() => setIsDailyLimitModalVisible(false)}
+                style={[styles.modalButton, styles.modalCancelButton]}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                testID="save-daily-limit-button"
+                accessibilityLabel="Save daily limit"
+                onPress={saveDailyLimit}
+                style={[styles.modalButton, styles.modalSaveButton]}
+              >
+                <Text style={styles.modalSaveText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenWrapper>
   );
 }
@@ -320,7 +415,99 @@ const styles = StyleSheet.create({
   progressCaption: {
     ...theme.typography.bodySm,
     color: theme.colors.text.secondary,
+  },
+  dailyLimitRow: {
     marginTop: theme.spacing.s2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.s2,
+  },
+  dailyLimitEditButton: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.8,
+  },
+  successToast: {
+    marginTop: theme.spacing.s2,
+    alignSelf: 'flex-start',
+    backgroundColor: '#ECFDF5',
+    borderRadius: theme.radius.full,
+    paddingVertical: theme.spacing.s1,
+    paddingHorizontal: theme.spacing.s3,
+  },
+  successToastText: {
+    ...theme.typography.bodyXs,
+    color: theme.colors.primary.dark,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(17,24,39,0.35)',
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.s6,
+  },
+  modalCard: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing.s4,
+    borderWidth: 1,
+    borderColor: theme.colors.secondary.border,
+    gap: theme.spacing.s3,
+  },
+  modalTitle: {
+    ...theme.typography.h3,
+    color: theme.colors.text.primary,
+  },
+  modalLabel: {
+    ...theme.typography.bodySm,
+    color: theme.colors.text.secondary,
+  },
+  modalInput: {
+    minHeight: 48,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.secondary.border,
+    paddingHorizontal: theme.spacing.s3,
+    color: theme.colors.text.primary,
+    ...theme.typography.body,
+  },
+  modalError: {
+    ...theme.typography.bodyXs,
+    color: theme.colors.danger,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: theme.spacing.s3,
+  },
+  modalButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: theme.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelButton: {
+    borderWidth: 1,
+    borderColor: theme.colors.secondary.border,
+    backgroundColor: theme.colors.background,
+  },
+  modalSaveButton: {
+    backgroundColor: theme.colors.primary.DEFAULT,
+  },
+  modalCancelText: {
+    ...theme.typography.bodySm,
+    color: theme.colors.text.secondary,
+    fontWeight: '700',
+  },
+  modalSaveText: {
+    ...theme.typography.bodySm,
+    color: theme.colors.text.inverse,
+    fontWeight: '700',
   },
   chartCard: {
     gap: theme.spacing.s4,

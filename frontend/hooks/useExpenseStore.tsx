@@ -8,6 +8,7 @@ const STORAGE_KEY = 'waltrack_store_v1';
 interface ExpenseStoreState {
   expenses: Expense[];
   monthlyBudget: number;
+  dailyLimit: number;
   currency: Currency;
 }
 
@@ -17,12 +18,18 @@ interface ExpenseStoreContextValue extends ExpenseStoreState {
   updateExpense: (id: string, nextExpense: NewExpense) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   setMonthlyBudget: (budget: number) => Promise<void>;
+  setDailyLimit: (limit: number) => Promise<void>;
   setCurrency: (currency: Currency) => Promise<void>;
+}
+
+function defaultDailyLimit(monthlyBudget: number) {
+  return Math.max(Math.round(monthlyBudget / 30), 1);
 }
 
 const initialState: ExpenseStoreState = {
   expenses: [],
   monthlyBudget: 10000,
+  dailyLimit: defaultDailyLimit(10000),
   currency: 'INR',
 };
 
@@ -54,6 +61,8 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
           setState({
             expenses: parsed.expenses ?? [],
             monthlyBudget: parsed.monthlyBudget ?? 10000,
+            dailyLimit:
+              parsed.dailyLimit ?? defaultDailyLimit(parsed.monthlyBudget ?? initialState.monthlyBudget),
             currency: parsed.currency ?? 'INR',
           });
         }
@@ -107,6 +116,10 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
     await runStateUpdate((prev) => ({ ...prev, monthlyBudget: budget }));
   };
 
+  const setDailyLimitValue = async (limit: number) => {
+    await runStateUpdate((prev) => ({ ...prev, dailyLimit: limit }));
+  };
+
   const setCurrencyValue = async (currency: Currency) => {
     await runStateUpdate((prev) => ({ ...prev, currency }));
   };
@@ -119,6 +132,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
       updateExpense,
       deleteExpense,
       setMonthlyBudget,
+      setDailyLimit: setDailyLimitValue,
       setCurrency: setCurrencyValue,
     }),
     [state, isReady]

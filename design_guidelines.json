@@ -1,75 +1,34 @@
 {
-  "project_name": "Waltrack",
-  "app_type": "Expo React Native Mobile App",
-  "design_philosophy": {
-    "identity": "The Performance Pro (Student Edition)",
-    "core_principles": [
-      "Speed over Decoration: Students need to log expenses in <3 seconds.",
-      "Green is Growth: Use Green (#10B981) for positive reinforcement (Budget left), not just currency.",
-      "White Space is Luxury: Use generous padding (p-6, p-8) to make the app feel expensive even if the student is broke.",
-      "Data needs Breathing Room: Don't cram charts. One chart per view."
-    ],
-    "anti_patterns": [
-      "No Dark Mode by default (User requested Clean White).",
-      "No Complex gradients (Keep it flat or subtle).",
-      "No 'Inter' for Headings (Use 'DM Sans' or System Bold).",
-      "No generic 'List' views without icons."
-    ]
+  "typography": {
+    "strategy": "The Performance Pro - Athleticism & Precision",
+    "headings": {
+      "fontFamily": "System Bold",
+      "fontSize": { "h1": 36, "h2": 28, "h3": 20, "amount": 48 },
+      "letterSpacing": -0.5,
+      "lineHeight": { "h1": 42, "h2": 34, "h3": 26 }
+    },
+    "body": {
+      "fontFamily": "System",
+      "fontSize": { "base": 16, "sm": 14, "xs": 12 },
+      "letterSpacing": 0.2,
+      "lineHeight": { "base": 24, "sm": 20, "xs": 16 }
+    }
   },
-  "tech_stack_constraints": {
-    "framework": "Expo React Native",
-    "styling": "StyleSheet with Design System Constants (or NativeWind if configured)",
-    "icons": "@expo/vector-icons (MaterialCommunityIcons, Ionicons)",
-    "charts": "react-native-gifted-charts",
-    "fonts": "expo-font (DM Sans, JetBrains Mono)"
+  "colors": {
+    "primary": "#10B981",
+    "primary_dark": "#059669",
+    "primary_light": "#D1FAE5",
+    "background_light": "#FFFFFF",
+    "background_dark": "#0A0A0A",
+    "surface_light": "#F9FAFB",
+    "surface_dark": "#1F2937",
+    "text_primary": "#111827",
+    "text_secondary": "#6B7280",
+    "danger": "#EF4444",
+    "border": "#E5E7EB",
+    "forbidden_colors": ["#7351B7", "#1B93A4"]
   },
-  "design_system": {
-    "colors": {
-      "primary": {
-        "DEFAULT": "#10B981",
-        "dark": "#059669",
-        "light": "#34D399",
-        "bg": "#ECFDF5"
-      },
-      "secondary": {
-        "DEFAULT": "#111827",
-        "gray": "#6B7280",
-        "lightGray": "#F3F4F6",
-        "border": "#E5E7EB"
-      },
-      "background": "#FFFFFF",
-      "surface": "#FAFAFA",
-      "danger": "#EF4444",
-      "warning": "#F59E0B",
-      "text": {
-        "primary": "#111827",
-        "secondary": "#6B7280",
-        "tertiary": "#9CA3AF",
-        "inverse": "#FFFFFF"
-      }
-    },
-    "spacing": {
-      "s1": 4,
-      "s2": 8,
-      "s3": 12,
-      "s4": 16,
-      "s6": 24,
-      "s8": 32,
-      "s12": 48
-    },
-    "typography": {
-      "headings": {
-        "h1": { "fontSize": 32, "fontWeight": "700", "lineHeight": 40, "letterSpacing": -0.5 },
-        "h2": { "fontSize": 24, "fontWeight": "700", "lineHeight": 32, "letterSpacing": -0.3 },
-        "h3": { "fontSize": 20, "fontWeight": "600", "lineHeight": 28 },
-        "amount": { "fontSize": 40, "fontWeight": "800", "letterSpacing": -1 }
-      },
-      "body": {
-        "base": { "fontSize": 16, "lineHeight": 24 },
-        "sm": { "fontSize": 14, "lineHeight": 20 },
-        "xs": { "fontSize": 12, "lineHeight": 16 }
-      }
-    },
+  "visual enhancers": {
     "borderRadius": {
       "sm": 8,
       "md": 12,
@@ -78,138 +37,74 @@
       "full": 9999
     },
     "shadows": {
-      "soft": {
-        "shadowColor": "#000",
-        "shadowOffset": { "width": 0, "height": 2 },
-        "shadowOpacity": 0.05,
-        "shadowRadius": 10,
-        "elevation": 2
-      },
       "card": {
-        "shadowColor": "#000",
-        "shadowOffset": { "width": 0, "height": 4 },
-        "shadowOpacity": 0.1,
-        "shadowRadius": 12,
-        "elevation": 4
-      }
-    }
-  },
-  "assets": {
-    "icons": {
-      "library": "MaterialCommunityIcons",
-      "mapping": {
-        "Food": "food-apple-outline",
-        "Travel": "airplane",
-        "Shopping": "shopping-outline",
-        "Entertainment": "movie-open-outline",
-        "Others": "dots-horizontal-circle-outline",
-        "Home": "home-variant-outline",
-        "Add": "plus-circle",
-        "Transactions": "format-list-bulleted",
-        "Insights": "chart-box-outline",
-        "Budget": "wallet-outline",
-        "Delete": "trash-can-outline",
-        "Edit": "pencil-outline"
+        "boxShadow": "0px 8px 24px rgba(16, 185, 129, 0.08)"
+      },
+      "button": {
+        "boxShadow": "0px 4px 12px rgba(16, 185, 129, 0.2)"
       }
     },
-    "images": {
-      "logo": "Use a simple Text Logo 'Waltrack' with a Green Dot '.' at the end.",
-      "empty_state": "Use a large gray icon (e.g., 'wallet-outline' size 80) with opacity 0.3."
-    }
+    "borders": "1px solid #E5E7EB for cards to prevent floating syndrome"
   },
-  "screens": {
-    "Dashboard": {
-      "layout": "Bento Grid (Vertical Scroll)",
-      "components": [
-        {
-          "name": "Header",
-          "style": "Flex Row, Space Between",
-          "content": "Greeting + User Avatar (placeholder)"
-        },
-        {
-          "name": "Balance Card",
-          "style": "Full Width, Green Gradient or Solid Primary, Rounded XL",
-          "content": "Total Balance (Large Text), Monthly Budget Label"
-        },
-        {
-          "name": "Daily Progress",
-          "style": "Card, White BG",
-          "content": "Progress Bar (Green filled), 'Spent today: $X / Daily Limit'"
-        },
-        {
-          "name": "Category Breakdown",
-          "style": "Card, White BG",
-          "content": "Pie Chart (Donut style) with Legend"
-        }
-      ]
-    },
-    "AddExpense": {
-      "layout": "Focus Mode (Minimal)",
-      "components": [
-        {
-          "name": "Amount Input",
-          "style": "Massive Text (64px), Center Aligned, Auto Focus",
-          "behavior": "Numeric Keyboard"
-        },
-        {
-          "name": "Category Grid",
-          "style": "3 Columns, Icon + Label, Selectable (Green Border)"
-        },
-        {
-          "name": "Note Input",
-          "style": "Simple Underline Input"
-        },
-        {
-          "name": "Submit Button",
-          "style": "Floating Bottom or Fixed Bottom, Full Width, Green"
-        }
-      ]
-    },
-    "Transactions": {
-      "layout": "List View",
-      "components": [
-        {
-          "name": "Filter Tabs",
-          "style": "Segmented Control (All, Income, Expense)"
-        },
-        {
-          "name": "Transaction List",
-          "style": "Grouped by Date (Today, Yesterday)",
-          "item_style": "Row: Icon (Left) + Title/Note (Mid) + Amount (Right, Red/Green)"
-        }
-      ]
-    },
-    "Insights": {
-      "layout": "Scrollable Analytics",
-      "components": [
-        {
-          "name": "Weekly Spend Chart",
-          "style": "Bar Chart, Last 7 Days"
-        },
-        {
-          "name": "Spending Trend",
-          "style": "Line Chart (Bezier), Monthly Trend"
-        },
-        {
-          "name": "Highest Spend Day",
-          "style": "Stat Card"
-        }
-      ]
+  "grids": {
+    "bento_strategy_rn": "Use flexWrap: 'wrap' with percentage widths (48% for half, 100% for full) and generous margins (margin: 16) to emulate the Bento grid in React Native.",
+    "spacing_scale": [4, 8, 12, 16, 24, 32, 48, 64]
+  },
+  "layouts": {
+    "onboarding": "Full screen layout. Large aesthetic hero image at top, soft rounded card sheet at bottom for form. Fields: Name, Email, Phone, Age. Large pill-shaped green submit button.",
+    "settings_tab": "5th bottom tab. Minimalist profile header (view-only), Settings List (Reminders toggle + Time picker), Export actions (PDF/CSV). Cardless list style with right chevrons.",
+    "insights_enhanced": "Sticky month selector at the top. Total Spend massive number. Budget Progress bar (Green vs Red). Category breakdown bento cards. Horizontal scroll for weekly bar chart."
+  },
+  "motion": {
+    "toggles": "Smooth switch animation using built-in React Native Switch or Reanimated.",
+    "page_transitions": "Expo Router default native stack transitions (slide from right).",
+    "buttons": "Opacity feedback (activeOpacity=0.7) on TouchableOpacity."
+  },
+  "accessibility": {
+    "general": "Use accessibilityLabel, accessibilityRole, and accessible={true} on all interactive elements.",
+    "contrast": "Ensure green text over white or white over green meets 4.5:1 ratio. (Use #059669 for text if needed).",
+    "testing": "All interactive elements MUST include a testID attribute. Use kebab-case."
+  },
+  "media": {
+    "icons": "Use @expo/vector-icons. Simple, consistent stroke weights.",
+    "images": "Use fast-loading remote images or local assets with priority."
+  },
+  "3d libraries": {
+    "status": "N/A",
+    "reason": "Minimal performance-focused student mobile app. Avoid heavy 3D."
+  },
+  "image_urls": [
+    {
+      "url": "https://images.pexels.com/photos/7303990/pexels-photo-7303990.jpeg",
+      "category": "onboarding_hero",
+      "description": "Minimalist stationery aesthetic for the onboarding welcome screen background."
     }
+  ],
+  "component name": "Waltrack",
+  "component_path": {
+    "onboarding": "/app/frontend/app/onboarding.js",
+    "settings": "/app/frontend/app/(tabs)/settings.js",
+    "insights": "/app/frontend/app/(tabs)/insights.js"
   },
   "instructions_to_main_agent": [
-    "1. SETUP: Install 'react-native-gifted-charts' and 'nativewind' (if possible) or use the Design System constants provided.",
-    "2. NAVIGATION: Use Expo Router (app/ directory). Create tabs in 'app/(tabs)' and stack for modals.",
-    "3. STATE: Use 'AsyncStorage' for local data persistence. Create a simple 'TransactionContext' or Hook.",
-    "4. COMPONENTS: Create reusable 'Card', 'Button', 'Typography' components wrapped in safe areas.",
-    "5. STYLING: Apply the 'clean white' theme. Avoid dark backgrounds unless it's a specific 'dark mode' toggle (not MVP).",
-    "6. ACCESSIBILITY: Add 'accessibilityLabel' to all buttons and inputs. Use proper contrast (Green text on White bg is tricky, check contrast - use Dark Green for text).",
-    "7. DATA-TESTID: Add 'testID' prop to all interactive elements for testing."
+    "1. ARCHITECTURE: Extend Expo Router. In the root layout, check AsyncStorage for a saved profile. If null, render the '/onboarding.js' screen. Otherwise, render the main '(tabs)' layout.",
+    "2. ONBOARDING: Create '/app/frontend/app/onboarding.js' capturing Name, Email, Phone, and Age with validation. Use a clean, minimal layout with the provided hero image. Save profile to AsyncStorage upon success.",
+    "3. SETTINGS & PROFILE: Add a 5th tab 'Settings' in '/app/frontend/app/(tabs)/settings.js'. Display the read-only profile card. Include settings list for Reminders and Export options.",
+    "4. REMINDERS: Implement daily reminders using 'expo-notifications'. Allow users to toggle and select a custom time via a modal. On Android/iOS, schedule local notifications with a deep-link payload to the 'Add Expense' screen. On Web, provide a graceful fallback message.",
+    "5. INSIGHTS ENHANCEMENT: In '/app/frontend/app/(tabs)/insights.js', add a sticky month selector that auto-generates months based on existing transaction data. Display Total Spend, Remaining Budget, Average Daily Spend, and Highest Category. Use 'react-native-gifted-charts' for the Pie Chart and a horizontal scrolling Bar Chart.",
+    "6. EXPORT: In Settings or Insights, add an Export feature. Use 'expo-print' to generate a beautifully styled PDF report containing all transactions and insight summaries for the selected month. Support CSV generation. Use 'expo-sharing' to prompt the native share sheet.",
+    "7. UI/UX: Do not break existing flows. Keep the theme primary color #10B981. Ensure containers have non-transparent backgrounds (e.g., solid white). Note: React Native 0.74+ deprecates shadow* props; use 'boxShadow' string style instead (e.g., boxShadow: '0px 4px 12px rgba(0,0,0,0.1)').",
+    "8. FILES: Only write .js files (no .tsx). Add 'testID' (kebab-case) to all interactive elements."
   ],
-  "universal_guidelines": [
-    "Do not use gradients for text.",
-    "Use 'SafeAreaView' for all screens.",
-    "Use 'KeyboardAvoidingView' for forms.",
-    "Ensure touch targets are at least 44x44 points."
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Create depth through layered design elements with z-index hierarchy and modern RN boxShadow.",
+    "Always use modern button styles like pill-shaped (borderRadius: 9999) or sharp buttons with interaction animations & color relevant to the app style.",
+    "NEVER use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons. Use @expo/vector-icons.",
+    "Every interaction needs micro-animations - use TouchableOpacity's activeOpacity or simple LayoutAnimation.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap. Use padding 24px to 32px for main containers.",
+    "All interactive and key informational elements MUST include a testID attribute to facilitate robust automated testing.",
+    "DO NOT use complete transparent background in header, overlays, any surface that has content under it. Example: Dropdown or Sticky headers with transparent background."
   ]
 }
