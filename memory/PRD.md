@@ -23,6 +23,8 @@ User-selected preferences:
 - **Data Storage:** AsyncStorage (local-only, persistent)
 - **Analytics/Charts:** react-native-gifted-charts
 - **UI System:** Centralized theme constants + reusable card/button wrappers
+- **Notifications:** expo-notifications (daily local reminder scheduling)
+- **Export:** expo-print + expo-sharing + expo-file-system (PDF/CSV)
 - **Backend:** Existing FastAPI starter unchanged (not used by MVP per user choice)
 
 ## User Personas
@@ -75,6 +77,42 @@ User-selected preferences:
 - Added stable tab test IDs for automation.
 - Updated app metadata to Waltrack branding and light splash/background.
 
+### 2026-03-21
+- Added **first-launch onboarding** screen with required validations:
+  - Name
+  - Email format
+  - Numeric phone
+  - Numeric age
+- Implemented onboarding gate:
+  - First launch → `/onboarding`
+  - Existing profile → skip onboarding and open dashboard
+- Extended persistent store with:
+  - `userProfile`
+  - `reminderSettings` (enabled/hour/minute/AM-PM/notificationId)
+  - Queue-safe state persistence to reduce stale write risk
+- Added **Settings** as 5th bottom tab with:
+  - View-only profile section
+  - Daily reminder toggle
+  - Reminder time editor modal (12-hour AM/PM)
+  - Web fallback message for reminder capability
+- Integrated local notification handling:
+  - Daily scheduling for mobile
+  - Notification deep-link route to Add Expense screen
+- Enhanced **Insights** with monthly-report UX:
+  - Month selector (auto-generated from stored data months)
+  - Total monthly spending
+  - Remaining budget
+  - Highest spending category
+  - Average daily spending
+  - Category pie chart
+  - Weekly spending bar chart
+  - Budget progress indicator
+- Added export features in Insights:
+  - Export as PDF (detailed report with profile + insights + all transactions)
+  - Export as CSV (Date, Category, Amount, Note)
+  - Web-friendly fallbacks for export interactions
+- Preserved existing flows: dashboard daily-limit editing, add expense, transactions edit/delete.
+
 ## Testing Notes
 - Self-testing with screenshot automation completed for core create/edit/delete flow and routing.
 - Testing agent run completed (`/app/test_reports/iteration_1.json`) and all reported blockers were fixed.
@@ -85,12 +123,12 @@ User-selected preferences:
 ## Prioritized Backlog
 
 ### P0 (Critical remaining)
-- None for MVP scope.
+- None for requested scope.
 
 ### P1 (Important next)
-- Add settings screen for persistent currency preference and future toggles.
-- Add monthly reset / archive history UX.
-- Add explicit empty-state CTA buttons to jump to Add Expense.
+- Add profile edit flow (currently view-only by user choice).
+- Add deterministic web PDF export toast after browser print lifecycle closes.
+- Add reminder permission status card (granted/denied) for clarity.
 
 ### P2 (Future enhancements)
 - Optional backend sync + account login.
@@ -98,6 +136,6 @@ User-selected preferences:
 - Smart category auto-suggestion from note text.
 
 ## Next Tasks
-1. Add a lightweight Settings tab for currency and budget defaults.
-2. Add search/filter in transactions (category/date).
-3. Add monthly insights comparison (this month vs last month).
+1. Add transaction search/filter in history screen.
+2. Add profile edit and account reset options in Settings.
+3. Add monthly comparison cards (selected month vs previous month).

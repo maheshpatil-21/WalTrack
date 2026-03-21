@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Currency, Expense, NewExpense } from '../types/expense';
 
@@ -71,14 +71,22 @@ async function writeState(nextState: ExpenseStoreState) {
 export function ExpenseProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<ExpenseStoreState>(initialState);
   const [isReady, setIsReady] = useState(false);
+  const updateQueueRef = useRef(Promise.resolve());
 
   const runStateUpdate = async (updater: (prev: ExpenseStoreState) => ExpenseStoreState) => {
-    let nextState = state;
-    setState((prev) => {
-      nextState = updater(prev);
-      return nextState;
+    updateQueueRef.current = updateQueueRef.current.then(async () => {
+      let computedState: ExpenseStoreState | null = null;
+      setState((prev) => {
+        computedState = updater(prev);
+        return computedState;
+      });
+
+      if (computedState) {
+        await writeState(computedState);
+      }
     });
-    await writeState(nextState);
+
+    await updateQueueRef.current;
   };
 
   useEffect(() => {

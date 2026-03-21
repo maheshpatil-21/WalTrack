@@ -208,9 +208,16 @@ export default function InsightsScreen() {
       `;
 
       if (Platform.OS === 'web') {
-        await Print.printAsync({ html });
-        setExportStatus('Print dialog opened. Save as PDF to export.');
-        setTimeout(() => setExportStatus(''), 3000);
+        setExportStatus('Opening print dialog...');
+        setTimeout(async () => {
+          try {
+            await Print.printAsync({ html });
+            setExportStatus('Print dialog opened. Save as PDF to export.');
+            setTimeout(() => setExportStatus(''), 3000);
+          } catch {
+            setExportStatus('PDF export failed. Please try again.');
+          }
+        }, 1200);
         return;
       }
 
