@@ -5,11 +5,28 @@ import { Currency, Expense, NewExpense } from '../types/expense';
 
 const STORAGE_KEY = 'waltrack_store_v1';
 
+export interface UserProfile {
+  name: string;
+  email: string;
+  phone: string;
+  age: number;
+}
+
+export interface ReminderSettings {
+  enabled: boolean;
+  hour: number;
+  minute: number;
+  period: 'AM' | 'PM';
+  notificationId: string | null;
+}
+
 interface ExpenseStoreState {
   expenses: Expense[];
   monthlyBudget: number;
   dailyLimit: number;
   currency: Currency;
+  userProfile: UserProfile | null;
+  reminderSettings: ReminderSettings;
 }
 
 interface ExpenseStoreContextValue extends ExpenseStoreState {
@@ -20,17 +37,29 @@ interface ExpenseStoreContextValue extends ExpenseStoreState {
   setMonthlyBudget: (budget: number) => Promise<void>;
   setDailyLimit: (limit: number) => Promise<void>;
   setCurrency: (currency: Currency) => Promise<void>;
+  setUserProfile: (profile: UserProfile) => Promise<void>;
+  setReminderSettings: (settings: ReminderSettings) => Promise<void>;
 }
 
 function defaultDailyLimit(monthlyBudget: number) {
   return Math.max(Math.round(monthlyBudget / 30), 1);
 }
 
+const defaultReminderSettings: ReminderSettings = {
+  enabled: false,
+  hour: 9,
+  minute: 0,
+  period: 'PM',
+  notificationId: null,
+};
+
 const initialState: ExpenseStoreState = {
   expenses: [],
   monthlyBudget: 10000,
   dailyLimit: defaultDailyLimit(10000),
   currency: 'INR',
+  userProfile: null,
+  reminderSettings: defaultReminderSettings,
 };
 
 const ExpenseStoreContext = createContext<ExpenseStoreContextValue | undefined>(undefined);
@@ -64,6 +93,15 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
             dailyLimit:
               parsed.dailyLimit ?? defaultDailyLimit(parsed.monthlyBudget ?? initialState.monthlyBudget),
             currency: parsed.currency ?? 'INR',
+            userProfile: parsed.userProfile ?? null,
+            reminderSettings: {
+              enabled: parsed.reminderSettings?.enabled ?? defaultReminderSettings.enabled,
+              hour: parsed.reminderSettings?.hour ?? defaultReminderSettings.hour,
+              minute: parsed.reminderSettings?.minute ?? defaultReminderSettings.minute,
+              period: parsed.reminderSettings?.period ?? defaultReminderSettings.period,
+              notificationId:
+                parsed.reminderSettings?.notificationId ?? defaultReminderSettings.notificationId,
+            },
           });
         }
       } catch {
@@ -124,6 +162,14 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
     await runStateUpdate((prev) => ({ ...prev, currency }));
   };
 
+  const setUserProfileValue = async (profile: UserProfile) => {
+    await runStateUpdate((prev) => ({ ...prev, userProfile: profile }));
+  };
+
+  const setReminderSettingsValue = async (settings: ReminderSettings) => {
+    await runStateUpdate((prev) => ({ ...prev, reminderSettings: settings }));
+  };
+
   const value = useMemo(
     () => ({
       ...state,
@@ -134,6 +180,8 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
       setMonthlyBudget,
       setDailyLimit: setDailyLimitValue,
       setCurrency: setCurrencyValue,
+      setUserProfile: setUserProfileValue,
+      setReminderSettings: setReminderSettingsValue,
     }),
     [state, isReady]
   );

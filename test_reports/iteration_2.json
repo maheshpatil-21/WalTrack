@@ -1,0 +1,57 @@
+{
+  "summary": "Frontend-only mobile-first validation run completed on public Expo preview URL. Onboarding, profile persistence, tabs (including Settings), reminder toggle/time save, add expense, transactions edit/delete, and dashboard daily limit flows passed. Two areas remain: PDF export status behavior on web automation and unstable Expo web preview (Metro disconnect) during retest.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Insights - Export as PDF",
+        "issue": "After tapping Export as PDF on web preview automation, no success/fallback status message was observed within wait window. Likely tied to print dialog lifecycle in web/headless flow, but currently non-deterministic for user feedback verification.",
+        "testID": "export-pdf-button",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Expo web preview session stability",
+        "issue": "Retest run encountered Metro disconnection ('Disconnected from Metro (1006)'), after which selectors became unavailable and app state reset to onboarding.",
+        "affected_testIDs": [
+          "tab-add-expense",
+          "tab-insights",
+          "export-pdf-button"
+        ]
+      }
+    ],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/root/.emergent/automation_output/20260321_054036/console_20260321_054036.log",
+    "/root/.emergent/automation_output/20260321_054130/console_20260321_054130.log",
+    "/app/test_reports/artifacts_iter2/final_state_mobile.png",
+    "/app/test_reports/artifacts_iter2/insights_retest.png"
+  ],
+  "action_items": [
+    "Verify PDF export UX on web: ensure deterministic user feedback appears after print dialog action/cancel.",
+    "Re-run month selector multi-month validation in a stable web preview session (seed data with at least 2 month buckets).",
+    "Investigate and stabilize Expo web preview/Metro disconnect behavior for reliable QA cycles."
+  ],
+  "critical_code_review_comments": [
+    "useExpenseStore.runStateUpdate captures outer `state` while also using setState; rapid async writes can risk stale-state persistence under concurrent actions.",
+    "Feature behavior depends on AsyncStorage state; adding deterministic test seed hooks/testIDs for insights metrics would improve verifiability without brittle text parsing."
+  ],
+  "updated_files": [
+    "/app/test_reports/iteration_2.json"
+  ],
+  "success_rate": {
+    "backend": "Not run (frontend-only)",
+    "frontend": "85%"
+  },
+  "seed_data_creation": "Created TEST expenses via UI (TEST_CURR_MONTH, TEST_EDIT_DELETE, TEST_EDITED). Attempted prior-month seeding for month-selector validation; retest was affected by session instability.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Primary flows passed in one stable run. Remaining checks should focus on (1) PDF export status behavior on web and (2) month-selector multi-month validation in stable session. If Metro disconnect reappears, capture supervisor expo logs before rerun.",
+  "rca_of_issue": "RCA (environment + UX observability): PDF export on web calls Print.printAsync, which may depend on browser print dialog lifecycle not reliably represented in headless automation; status text may not appear deterministically during automated wait windows. Separate issue: Expo preview showed 'Disconnected from Metro (1006)' during retest, causing app rerender/reset and selector failures unrelated to feature logic."
+}

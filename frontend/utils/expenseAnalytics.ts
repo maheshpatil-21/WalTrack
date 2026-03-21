@@ -1,5 +1,12 @@
 import { categoryColorMap, Category, Currency, Expense } from '../types/expense';
 
+export interface MonthOption {
+  key: string;
+  year: number;
+  month: number;
+  label: string;
+}
+
 function isSameDate(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -10,6 +17,10 @@ function isSameDate(a: Date, b: Date) {
 
 function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
+function monthKey(year: number, month: number) {
+  return `${year}-${String(month + 1).padStart(2, '0')}`;
 }
 
 export function formatCurrency(value: number, currency: Currency) {
@@ -110,4 +121,73 @@ export function getBudgetSuggestion(monthlyBudget: number, monthlySpent: number)
     title: 'Nice pace',
     message: 'You are spending within your budget. Keep this momentum going.',
   };
+}
+
+export function getAvailableMonths(expenses: Expense[]) {
+  const map = new Map<string, MonthOption>();
+
+  expenses.forEach((expense) => {
+    const date = new Date(expense.date);
+    const key = monthKey(date.getFullYear(), date.getMonth());
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      });
+    }
+  });
+
+  if (!map.size) {
+    const now = new Date();
+    const nowKey = monthKey(now.getFullYear(), now.getMonth());
+    map.set(nowKey, {
+      key: nowKey,
+      year: now.getFullYear(),
+      month: now.getMonth(),
+      label: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    });
+  }
+
+  return [...map.values()].sort((a, b) => {
+    if (a.year !== b.year) {
+      return b.year - a.year;
+    }
+    return b.month - a.month;
+  });
+}
+
+export function getExpensesForMonth(expenses: Expense[], month: MonthOption) {
+  return expenses.filter((expense) => {
+    const expenseDate = new Date(expense.date);
+    return expenseDate.getFullYear() === month.year && expenseDate.getMonth() === month.month;
+  });
+}
+
+export function getHighestCategory(categoryData: { label: string; value: number }[]) {
+  if (!categoryData.length) {
+    return { label: 'N/A', value: 0 };
+  }
+  return categoryData.reduce((prev, current) => (current.value > prev.value ? current : prev), categoryData[0]);
+}
+
+export function getAverageDailySpending(total: number, year: number, month: number) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  return daysInMonth > 0 ? total / daysInMonth : 0;
+}
+
+export function getWeeklySpendingForMonth(expenses: Expense[]) {
+  const buckets = [0, 0, 0, 0, 0];
+
+  expenses.forEach((expense) => {
+    const dayOfMonth = new Date(expense.date).getDate();
+    const bucketIndex = Math.min(Math.floor((dayOfMonth - 1) / 7), 4);
+    buckets[bucketIndex] += expense.amount;
+  });
+
+  return buckets.map((value, index) => ({
+    value,
+    label: `W${index + 1}`,
+  }));
 }

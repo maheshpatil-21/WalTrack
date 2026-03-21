@@ -1,9 +1,25 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { theme } from '../../constants/theme';
+import { useExpenseStore } from '../../hooks/useExpenseStore';
 
 export default function TabsLayout() {
+  const { isReady, userProfile } = useExpenseStore();
+
+  if (!isReady) {
+    return (
+      <View style={styles.loaderWrap}>
+        <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
+      </View>
+    );
+  }
+
+  if (!userProfile) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <Tabs
       initialRouteName="dashboard"
@@ -64,6 +80,25 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarButtonTestID: 'tab-settings',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="cog-outline" color={color} size={size} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  loaderWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+  },
+});
