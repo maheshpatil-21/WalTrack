@@ -8,15 +8,17 @@ import {
   Text,
   TextInput,
   View,
+  ScrollView,
 } from 'react-native';
 
 import { ScaleButton } from '../../components/ScaleButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
 import { CATEGORY_OPTIONS, Category, categoryIconMap } from '../../types/expense';
 
 export default function AddExpenseScreen() {
+  const { theme } = useTheme();
   const { addExpense, currency } = useExpenseStore();
   const [amountInput, setAmountInput] = useState('');
   const [category, setCategory] = useState<Category>('Food');
@@ -46,76 +48,89 @@ export default function AddExpenseScreen() {
     <ScreenWrapper scrollable={false}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardContainer}
+        style={{ flex: 1 }}
       >
-        <View>
-          <Text style={styles.title}>Quick expense entry</Text>
-          <Text style={styles.subtitle}>Log in seconds, stay in control.</Text>
-        </View>
-
-        <View style={styles.amountBlock}>
-          <Text style={styles.amountPrefix}>{currency === 'INR' ? '₹' : '$'}</Text>
-          <TextInput
-            testID="amount-input"
-            accessibilityLabel="Expense amount"
-            value={amountInput}
-            onChangeText={(value) => {
-              setError('');
-              setAmountInput(value.replace(/[^0-9.]/g, ''));
-            }}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={theme.colors.text.tertiary}
-            style={styles.amountInput}
-          />
-        </View>
-
-        <View style={styles.sectionGap}>
-          <Text style={styles.label}>Choose category</Text>
-          <View style={styles.categoryGrid}>
-            {CATEGORY_OPTIONS.map((item) => (
-              <Pressable
-                key={item}
-                testID={`category-${item}`}
-                accessibilityLabel={`Select ${item} category`}
-                onPress={() => setCategory(item)}
-                style={[styles.categoryChip, category === item && styles.categoryChipActive]}
-              >
-                <MaterialCommunityIcons
-                  name={categoryIconMap[item]}
-                  size={22}
-                  color={category === item ? theme.colors.primary.dark : theme.colors.text.secondary}
-                />
-                <Text style={[styles.categoryLabel, category === item && styles.categoryLabelActive]}>
-                  {item}
-                </Text>
-              </Pressable>
-            ))}
+        <ScrollView
+          contentContainerStyle={[styles.keyboardContainer, { gap: theme.spacing.s6 }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View>
+            <Text style={[styles.title, { color: theme.colors.text.primary }]}>Quick expense entry</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.text.secondary, marginTop: theme.spacing.s1 }]}>Log in seconds, stay in control.</Text>
           </View>
-        </View>
 
-        <View style={styles.sectionGap}>
-          <Text style={styles.label}>Note (optional)</Text>
-          <TextInput
-            testID="note-input"
-            accessibilityLabel="Expense note"
-            value={note}
-            onChangeText={setNote}
-            placeholder="Lunch with friends"
-            placeholderTextColor={theme.colors.text.tertiary}
-            style={styles.noteInput}
-          />
-        </View>
+          <View style={[styles.amountBlock, { borderBottomColor: theme.colors.secondary.border }]}>
+            <Text style={[styles.amountPrefix, { color: theme.colors.primary.DEFAULT }]}>{currency === 'INR' ? '₹' : '$'}</Text>
+            <TextInput
+              testID="amount-input"
+              accessibilityLabel="Expense amount"
+              value={amountInput}
+              onChangeText={(value) => {
+                setError('');
+                setAmountInput(value.replace(/[^0-9.]/g, ''));
+              }}
+              keyboardType="numeric"
+              placeholder="0"
+              placeholderTextColor={theme.colors.text.tertiary}
+              style={[styles.amountInput, { color: theme.colors.text.primary }]}
+            />
+          </View>
 
-        <View style={styles.footerWrap}>
-          {!!error && <Text style={styles.errorText}>{error}</Text>}
-          <ScaleButton
-            testID="save-expense-button"
-            accessibilityLabel="Save expense"
-            label="Save Expense"
-            onPress={submitExpense}
-          />
-        </View>
+          <View style={[styles.sectionGap, { gap: theme.spacing.s3 }]}>
+            <Text style={[styles.label, { color: theme.colors.text.secondary }]}>Choose category</Text>
+            <View style={styles.categoryGrid}>
+              {CATEGORY_OPTIONS.map((item) => (
+                <Pressable
+                  key={item}
+                  testID={`category-${item}`}
+                  accessibilityLabel={`Select ${item} category`}
+                  onPress={() => setCategory(item)}
+                  style={[
+                    styles.categoryChip,
+                    { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.background },
+                    category === item && [styles.categoryChipActive, { borderColor: theme.colors.primary.DEFAULT, backgroundColor: theme.colors.primary.bg }]
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={categoryIconMap[item] as any}
+                    size={22}
+                    color={category === item ? theme.colors.primary.dark : theme.colors.text.secondary}
+                  />
+                  <Text style={[
+                    styles.categoryLabel,
+                    { color: theme.colors.text.secondary },
+                    category === item && { color: theme.colors.primary.dark, fontWeight: '700' }
+                  ]}>
+                    {item}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={[styles.sectionGap, { gap: theme.spacing.s3 }]}>
+            <Text style={[styles.label, { color: theme.colors.text.secondary }]}>Note (optional)</Text>
+            <TextInput
+              testID="note-input"
+              accessibilityLabel="Expense note"
+              value={note}
+              onChangeText={setNote}
+              placeholder="Lunch with friends"
+              placeholderTextColor={theme.colors.text.tertiary}
+              style={[styles.noteInput, { borderBottomColor: theme.colors.secondary.border, color: theme.colors.text.primary }]}
+            />
+          </View>
+
+          <View style={[styles.footerWrap, { gap: theme.spacing.s3 }]}>
+            {!!error && <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text>}
+            <ScaleButton
+              testID="save-expense-button"
+              accessibilityLabel="Save expense"
+              label="Save Expense"
+              onPress={submitExpense}
+            />
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </ScreenWrapper>
   );
@@ -125,85 +140,80 @@ const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
     justifyContent: 'space-between',
-    gap: theme.spacing.s6,
   },
   title: {
-    ...theme.typography.h2,
-    color: theme.colors.text.primary,
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 32,
   },
   subtitle: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s1,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
   },
   amountBlock: {
-    borderBottomColor: theme.colors.secondary.border,
     borderBottomWidth: 1,
-    paddingBottom: theme.spacing.s2,
+    paddingBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   amountPrefix: {
-    ...theme.typography.amount,
-    color: theme.colors.primary.DEFAULT,
+    fontSize: 40,
+    fontWeight: '800',
+    lineHeight: 46,
   },
   amountInput: {
     flex: 1,
-    ...theme.typography.amount,
-    color: theme.colors.text.primary,
+    fontSize: 40,
+    fontWeight: '800',
+    lineHeight: 46,
     minHeight: 78,
   },
   sectionGap: {
-    gap: theme.spacing.s3,
   },
   label: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
     fontWeight: '600',
+    lineHeight: 20,
   },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   categoryChip: {
     width: '31%',
     minHeight: 78,
-    borderRadius: theme.radius.md,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: theme.spacing.s1,
+    gap: 4,
   },
   categoryChipActive: {
-    borderColor: theme.colors.primary.DEFAULT,
-    backgroundColor: theme.colors.primary.bg,
   },
   categoryLabel: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 16,
     textAlign: 'center',
   },
   categoryLabelActive: {
-    color: theme.colors.primary.dark,
-    fontWeight: '700',
   },
   noteInput: {
     minHeight: 48,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.secondary.border,
-    color: theme.colors.text.primary,
-    ...theme.typography.body,
+    fontSize: 16,
+    fontWeight: '400',
+    lineHeight: 24,
   },
   footerWrap: {
-    gap: theme.spacing.s3,
-    paddingBottom: theme.spacing.s2,
+    paddingBottom: 8,
   },
   errorText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.danger,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
   },
 });

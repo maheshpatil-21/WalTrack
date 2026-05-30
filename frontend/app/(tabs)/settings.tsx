@@ -15,7 +15,8 @@ import {
 import { ScaleButton } from '../../components/ScaleButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { WaltrackCard } from '../../components/WaltrackCard';
-import { theme } from '../../constants/theme';
+import AboutCard from '../../components/AboutCard';
+import { useTheme } from '../../contexts/ThemeContext';
 import { ReminderSettings, useExpenseStore } from '../../hooks/useExpenseStore';
 
 function formatReminderTime(hour: number, minute: number, period: 'AM' | 'PM') {
@@ -30,6 +31,7 @@ function convertTo24Hour(hour: number, period: 'AM' | 'PM') {
 }
 
 export default function SettingsScreen() {
+  const { mode, theme, setTheme } = useTheme();
   const { userProfile, reminderSettings, setReminderSettings } = useExpenseStore();
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [hourInput, setHourInput] = useState(String(reminderSettings.hour));
@@ -143,36 +145,59 @@ export default function SettingsScreen() {
   return (
     <ScreenWrapper>
       <View style={styles.headerWrap}>
-        <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Manage profile and reminders</Text>
+        <Text style={[styles.title, { color: theme.colors.text.primary }]}>Settings</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>Manage profile and reminders</Text>
       </View>
 
       <WaltrackCard style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>User Profile</Text>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>User Profile</Text>
         <View style={styles.profileRow}>
-          <Text style={styles.profileLabel}>Name</Text>
-          <Text style={styles.profileValue}>{userProfile?.name ?? '-'}</Text>
+          <Text style={[styles.profileLabel, { color: theme.colors.text.secondary }]}>Name</Text>
+          <Text style={[styles.profileValue, { color: theme.colors.text.primary }]}>{userProfile?.name ?? '-'}</Text>
         </View>
         <View style={styles.profileRow}>
-          <Text style={styles.profileLabel}>Email</Text>
-          <Text style={styles.profileValue}>{userProfile?.email ?? '-'}</Text>
+          <Text style={[styles.profileLabel, { color: theme.colors.text.secondary }]}>Email</Text>
+          <Text style={[styles.profileValue, { color: theme.colors.text.primary }]}>{userProfile?.email ?? '-'}</Text>
         </View>
         <View style={styles.profileRow}>
-          <Text style={styles.profileLabel}>Mobile</Text>
-          <Text style={styles.profileValue}>{userProfile?.phone ?? '-'}</Text>
+          <Text style={[styles.profileLabel, { color: theme.colors.text.secondary }]}>Mobile</Text>
+          <Text style={[styles.profileValue, { color: theme.colors.text.primary }]}>{userProfile?.phone ?? '-'}</Text>
         </View>
         <View style={styles.profileRow}>
-          <Text style={styles.profileLabel}>Age</Text>
-          <Text style={styles.profileValue}>{userProfile?.age ?? '-'}</Text>
+          <Text style={[styles.profileLabel, { color: theme.colors.text.secondary }]}>Age</Text>
+          <Text style={[styles.profileValue, { color: theme.colors.text.primary }]}>{userProfile?.age ?? '-'}</Text>
         </View>
       </WaltrackCard>
 
       <WaltrackCard style={styles.sectionCard}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>Appearance</Text>
         <View style={styles.rowBetween}>
           <View>
-            <Text style={styles.sectionTitle}>Daily Expense Reminder</Text>
-            <Text style={styles.mutedText}>Reminder Enabled: {reminderSettings.enabled ? 'ON' : 'OFF'}</Text>
+            <Text style={[styles.profileLabel, { color: theme.colors.text.secondary }]}>Theme</Text>
+            <Text style={[styles.profileValue, { color: theme.colors.text.primary, marginTop: 4 }]}>
+              {mode === 'dark' ? '🌙 Dark' : '☀️ Light'}
+            </Text>
           </View>
+          <Pressable
+            testID="theme-toggle"
+            accessibilityLabel={`Switch to ${mode === 'dark' ? 'light' : 'dark'} theme`}
+            style={[styles.themeToggleButton, { borderColor: theme.colors.secondary.border }]}
+            onPress={() => {
+              const newTheme = mode === 'dark' ? 'light' : 'dark';
+              setTheme(newTheme);
+            }}
+          >
+            <Text style={[styles.themeToggleText, { color: theme.colors.primary.DEFAULT }]}>
+              {mode === 'dark' ? 'Light' : 'Dark'}
+            </Text>
+          </Pressable>
+        </View>
+      </WaltrackCard>
+
+      <WaltrackCard style={styles.sectionCard}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>Daily Expense Reminder</Text>
+        <View style={styles.rowBetween}>
+          <Text style={[styles.mutedText, { color: theme.colors.text.secondary }]}>Reminder Enabled: {reminderSettings.enabled ? 'ON' : 'OFF'}</Text>
           <Switch
             testID="reminder-toggle"
             accessibilityLabel="Toggle daily reminder"
@@ -186,30 +211,32 @@ export default function SettingsScreen() {
         <Pressable
           testID="edit-reminder-time"
           accessibilityLabel="Edit reminder time"
-          style={styles.timeRow}
+          style={[styles.timeRow, { borderTopColor: theme.colors.secondary.border }]}
           onPress={openTimeEditor}
         >
           <View>
-            <Text style={styles.timeLabel}>Reminder Time</Text>
-            <Text style={styles.timeValue}>{reminderTimeText}</Text>
+            <Text style={[styles.timeLabel, { color: theme.colors.text.secondary }]}>Reminder Time</Text>
+            <Text style={[styles.timeValue, { color: theme.colors.text.primary }]}>{reminderTimeText}</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color={theme.colors.text.secondary} />
         </Pressable>
 
         {Platform.OS === 'web' && (
-          <Text style={styles.webFallback}>
+          <Text style={[styles.webFallback, { color: theme.colors.text.secondary }]}>
             Web fallback: reminder settings are saved here; push reminders run on mobile app.
           </Text>
         )}
       </WaltrackCard>
 
       {!!statusMessage && (
-        <View style={styles.statusToast}>
-          <Text style={styles.statusText}>{statusMessage}</Text>
+        <View style={[styles.statusToast, { backgroundColor: '#ECFDF5' }]}>
+          <Text style={[styles.statusText, { color: theme.colors.primary.dark }]}>{statusMessage}</Text>
         </View>
       )}
 
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      <AboutCard />
+
+      {!!error && <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text>}
 
       <Modal
         visible={isTimeModalOpen}
@@ -217,12 +244,12 @@ export default function SettingsScreen() {
         animationType="fade"
         onRequestClose={() => setIsTimeModalOpen(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Set Reminder Time</Text>
+        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(17,24,39,0.35)' }]}>
+          <View style={[styles.modalCard, { backgroundColor: theme.colors.background, borderColor: theme.colors.secondary.border }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.text.primary }]}>Set Reminder Time</Text>
             <View style={styles.timeInputRow}>
               <View style={styles.timeInputWrap}>
-                <Text style={styles.modalLabel}>Hour</Text>
+                <Text style={[styles.modalLabel, { color: theme.colors.text.secondary }]}>Hour</Text>
                 <TextInput
                   testID="reminder-hour-input"
                   accessibilityLabel="Reminder hour"
@@ -232,11 +259,11 @@ export default function SettingsScreen() {
                     setError('');
                     setHourInput(value.replace(/[^0-9]/g, ''));
                   }}
-                  style={styles.modalInput}
+                  style={[styles.modalInput, { borderColor: theme.colors.secondary.border, color: theme.colors.text.primary }]}
                 />
               </View>
               <View style={styles.timeInputWrap}>
-                <Text style={styles.modalLabel}>Minute</Text>
+                <Text style={[styles.modalLabel, { color: theme.colors.text.secondary }]}>Minute</Text>
                 <TextInput
                   testID="reminder-minute-input"
                   accessibilityLabel="Reminder minute"
@@ -246,7 +273,7 @@ export default function SettingsScreen() {
                     setError('');
                     setMinuteInput(value.replace(/[^0-9]/g, ''));
                   }}
-                  style={styles.modalInput}
+                  style={[styles.modalInput, { borderColor: theme.colors.secondary.border, color: theme.colors.text.primary }]}
                 />
               </View>
             </View>
@@ -257,10 +284,17 @@ export default function SettingsScreen() {
                   key={item}
                   testID={`reminder-period-${item}`}
                   accessibilityLabel={`Set reminder period ${item}`}
-                  style={[styles.periodChip, period === item && styles.periodChipActive]}
+                  style={[
+                    styles.periodChip,
+                    { borderColor: theme.colors.secondary.border },
+                    period === item && { backgroundColor: theme.colors.primary.bg, borderColor: theme.colors.primary.DEFAULT },
+                  ]}
                   onPress={() => setPeriod(item)}
                 >
-                  <Text style={[styles.periodChipText, period === item && styles.periodChipTextActive]}>
+                  <Text style={[
+                    styles.periodChipText,
+                    { color: period === item ? theme.colors.primary.dark : theme.colors.text.secondary },
+                  ]}>
                     {item}
                   </Text>
                 </Pressable>
@@ -292,38 +326,40 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   headerWrap: {
-    marginBottom: theme.spacing.s4,
+    marginBottom: 16,
   },
   title: {
-    ...theme.typography.h2,
-    color: theme.colors.text.primary,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700',
   },
   subtitle: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s1,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 4,
   },
   sectionCard: {
-    marginBottom: theme.spacing.s4,
-    gap: theme.spacing.s3,
+    marginBottom: 16,
+    gap: 12,
   },
   sectionTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
+    fontSize: 18,
+    lineHeight: 28,
+    fontWeight: '600',
   },
   profileRow: {
     minHeight: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   profileLabel: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
   profileValue: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.primary,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: '600',
     flexShrink: 1,
     textAlign: 'right',
@@ -332,122 +368,129 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   mutedText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s1,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 4,
   },
   timeRow: {
     minHeight: 52,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.secondary.border,
-    paddingTop: theme.spacing.s3,
+    paddingTop: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   timeLabel: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
   timeValue: {
-    ...theme.typography.body,
-    color: theme.colors.text.primary,
+    fontSize: 15,
+    lineHeight: 22,
     fontWeight: '700',
-    marginTop: theme.spacing.s1,
+    marginTop: 4,
   },
   webFallback: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    lineHeight: 18,
   },
   statusToast: {
     alignSelf: 'flex-start',
-    backgroundColor: '#ECFDF5',
-    borderRadius: theme.radius.full,
-    paddingHorizontal: theme.spacing.s3,
-    paddingVertical: theme.spacing.s1,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
   statusText: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.primary.dark,
+    fontSize: 12,
+    lineHeight: 18,
     fontWeight: '600',
   },
   errorText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.danger,
-    marginTop: theme.spacing.s2,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 8,
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.s6,
-    backgroundColor: 'rgba(17,24,39,0.35)',
+    paddingHorizontal: 24,
   },
   modalCard: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.xl,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    padding: theme.spacing.s4,
-    gap: theme.spacing.s3,
+    padding: 16,
+    gap: 12,
   },
   modalTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
+    fontSize: 18,
+    lineHeight: 28,
+    fontWeight: '600',
   },
   timeInputRow: {
     flexDirection: 'row',
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   timeInputWrap: {
     flex: 1,
-    gap: theme.spacing.s1,
+    gap: 4,
   },
   modalLabel: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    lineHeight: 18,
   },
   modalInput: {
     minHeight: 46,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.s3,
-    ...theme.typography.body,
-    color: theme.colors.text.primary,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    lineHeight: 22,
   },
   periodRow: {
     flexDirection: 'row',
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   periodChip: {
     minHeight: 42,
     flex: 1,
-    borderRadius: theme.radius.full,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   periodChipActive: {
-    backgroundColor: theme.colors.primary.bg,
-    borderColor: theme.colors.primary.DEFAULT,
+    // Background and border colors applied inline
   },
   periodChipText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: '700',
   },
   periodChipTextActive: {
-    color: theme.colors.primary.dark,
+    // Color applied inline
   },
   modalActions: {
     flexDirection: 'row',
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   modalButton: {
     flex: 1,
+  },
+  themeToggleButton: {
+    minHeight: 40,
+    minWidth: 80,
+    borderWidth: 1,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  themeToggleText: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 20,
   },
 });

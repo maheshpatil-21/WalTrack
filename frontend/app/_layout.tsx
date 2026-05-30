@@ -3,11 +3,13 @@ import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
+import { ThemeProvider } from '../contexts/ThemeContext';
 import { ExpenseProvider } from '../hooks/useExpenseStore';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -40,8 +42,10 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <ExpenseProvider>
-      <RootNavigator />
-    </ExpenseProvider>
+    <ThemeProvider>
+      <ExpenseProvider>
+        <RootNavigator />
+      </ExpenseProvider>
+    </ThemeProvider>
   );
 }

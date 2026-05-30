@@ -9,7 +9,7 @@ import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from
 import { ScaleButton } from '../../components/ScaleButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { WaltrackCard } from '../../components/WaltrackCard';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
 import {
   formatCurrency,
@@ -33,6 +33,7 @@ function escapeHtml(value: string) {
 }
 
 export default function InsightsScreen() {
+  const { theme } = useTheme();
   const { expenses, monthlyBudget, currency, userProfile } = useExpenseStore();
   const { width } = useWindowDimensions();
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
@@ -240,16 +241,16 @@ export default function InsightsScreen() {
     <ScreenWrapper>
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>Insights</Text>
-          <Text style={styles.subtitle}>Monthly reports and history</Text>
+          <Text style={[styles.title, { color: theme.colors.text.primary }]}>Insights</Text>
+          <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>Monthly reports and history</Text>
         </View>
         <Pressable
           testID="month-selector-toggle"
           accessibilityLabel="Open month selector"
-          style={styles.monthToggle}
+          style={[styles.monthToggle, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.background }]}
           onPress={() => setIsMonthPickerOpen((prev) => !prev)}
         >
-          <Text style={styles.monthToggleText}>{selectedMonth?.label ?? 'Select Month'}</Text>
+          <Text style={[styles.monthToggleText, { color: theme.colors.text.primary }]}>{selectedMonth?.label ?? 'Select Month'}</Text>
           <MaterialCommunityIcons
             name={isMonthPickerOpen ? 'chevron-up' : 'chevron-down'}
             size={18}
@@ -267,7 +268,7 @@ export default function InsightsScreen() {
               accessibilityLabel={`Select ${option.label}`}
               style={[
                 styles.monthOption,
-                selectedMonth?.key === option.key && styles.monthOptionActive,
+                selectedMonth?.key === option.key && { backgroundColor: theme.colors.primary.bg },
               ]}
               onPress={() => {
                 setSelectedMonthKey(option.key);
@@ -277,7 +278,7 @@ export default function InsightsScreen() {
               <Text
                 style={[
                   styles.monthOptionText,
-                  selectedMonth?.key === option.key && styles.monthOptionTextActive,
+                  { color: selectedMonth?.key === option.key ? theme.colors.primary.dark : theme.colors.text.secondary },
                 ]}
               >
                 {option.label}
@@ -288,39 +289,39 @@ export default function InsightsScreen() {
       )}
 
       <WaltrackCard style={styles.reportCard}>
-        <Text style={styles.cardTitle}>Monthly Report</Text>
+        <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>Monthly Report</Text>
         <View style={styles.metricsGrid}>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>Total Spending</Text>
-            <Text style={styles.metricValue}>{formatCurrency(monthlySpending, currency)}</Text>
+          <View style={[styles.metricItem, { borderColor: theme.colors.secondary.border }]}>
+            <Text style={[styles.metricLabel, { color: theme.colors.text.secondary }]}>Total Spending</Text>
+            <Text style={[styles.metricValue, { color: theme.colors.text.primary }]}>{formatCurrency(monthlySpending, currency)}</Text>
           </View>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>Remaining Budget</Text>
-            <Text style={styles.metricValue}>{formatCurrency(remainingBudget, currency)}</Text>
+          <View style={[styles.metricItem, { borderColor: theme.colors.secondary.border }]}>
+            <Text style={[styles.metricLabel, { color: theme.colors.text.secondary }]}>Remaining Budget</Text>
+            <Text style={[styles.metricValue, { color: theme.colors.text.primary }]}>{formatCurrency(remainingBudget, currency)}</Text>
           </View>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>Highest Category</Text>
-            <Text style={styles.metricValue}>{highestCategory.label}</Text>
+          <View style={[styles.metricItem, { borderColor: theme.colors.secondary.border }]}>
+            <Text style={[styles.metricLabel, { color: theme.colors.text.secondary }]}>Highest Category</Text>
+            <Text style={[styles.metricValue, { color: theme.colors.text.primary }]}>{highestCategory.label}</Text>
           </View>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>Avg Daily Spend</Text>
-            <Text style={styles.metricValue}>{formatCurrency(averageDailySpending, currency)}</Text>
+          <View style={[styles.metricItem, { borderColor: theme.colors.secondary.border }]}>
+            <Text style={[styles.metricLabel, { color: theme.colors.text.secondary }]}>Avg Daily Spend</Text>
+            <Text style={[styles.metricValue, { color: theme.colors.text.primary }]}>{formatCurrency(averageDailySpending, currency)}</Text>
           </View>
         </View>
       </WaltrackCard>
 
       <WaltrackCard style={styles.cardGap}>
-        <Text style={styles.cardTitle}>Monthly budget progress</Text>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${budgetProgress * 100}%` }]} />
+        <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>Monthly budget progress</Text>
+        <View style={[styles.progressTrack, { backgroundColor: theme.colors.secondary.lightGray }]}>
+          <View style={[styles.progressFill, { width: `${budgetProgress * 100}%`, backgroundColor: theme.colors.primary.DEFAULT }]} />
         </View>
-        <Text style={styles.progressText}>
+        <Text style={[styles.progressText, { color: theme.colors.text.secondary }]}>
           {formatCurrency(monthlySpending, currency)} spent of {formatCurrency(monthlyBudget, currency)}
         </Text>
       </WaltrackCard>
 
       <WaltrackCard style={styles.cardGap}>
-        <Text style={styles.cardTitle}>Category distribution</Text>
+        <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>Category distribution</Text>
         {categoryBreakdown.length ? (
           <>
             <PieChart
@@ -330,26 +331,26 @@ export default function InsightsScreen() {
               innerRadius={56}
               innerCircleColor={theme.colors.background}
               centerLabelComponent={() => (
-                <Text style={styles.centerPieText}>{formatCurrency(monthlySpending, currency)}</Text>
+                <Text style={[styles.centerPieText, { color: theme.colors.text.primary }]}>{formatCurrency(monthlySpending, currency)}</Text>
               )}
             />
             <View style={styles.categoryWrap}>
               {categoryBreakdown.map((item) => (
                 <View key={item.label} style={styles.categoryRow}>
                   <View style={[styles.categoryDot, { backgroundColor: item.color }]} />
-                  <Text style={styles.categoryLabel}>{item.label}</Text>
-                  <Text style={styles.categoryValue}>{formatCurrency(item.value, currency)}</Text>
+                  <Text style={[styles.categoryLabel, { color: theme.colors.text.secondary }]}>{item.label}</Text>
+                  <Text style={[styles.categoryValue, { color: theme.colors.text.primary }]}>{formatCurrency(item.value, currency)}</Text>
                 </View>
               ))}
             </View>
           </>
         ) : (
-          <Text style={styles.emptyText}>No category data for selected month.</Text>
+          <Text style={[styles.emptyText, { color: theme.colors.text.secondary }]}>No category data for selected month.</Text>
         )}
       </WaltrackCard>
 
       <WaltrackCard style={styles.cardGap}>
-        <Text style={styles.cardTitle}>Weekly spending (selected month)</Text>
+        <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>Weekly spending (selected month)</Text>
         <BarChart
           data={weeklySeries}
           width={chartWidth}
@@ -362,7 +363,7 @@ export default function InsightsScreen() {
           yAxisThickness={0}
           xAxisThickness={0}
           hideRules
-          xAxisLabelTextStyle={styles.axisLabel}
+          xAxisLabelTextStyle={[styles.axisLabel, { color: theme.colors.text.secondary }]}
         />
       </WaltrackCard>
 
@@ -376,13 +377,13 @@ export default function InsightsScreen() {
               : styles.tipGood,
         ]}
       >
-        <Text style={styles.tipTitle}>{suggestion.title}</Text>
-        <Text style={styles.tipText}>{suggestion.message}</Text>
+        <Text style={[styles.tipTitle, { color: theme.colors.text.primary }]}>{suggestion.title}</Text>
+        <Text style={[styles.tipText, { color: theme.colors.text.secondary, marginTop: 8 }]}>{suggestion.message}</Text>
       </WaltrackCard>
 
       <WaltrackCard style={styles.exportCard}>
-        <Text style={styles.cardTitle}>Export Data</Text>
-        <Text style={styles.exportHint}>
+        <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>Export Data</Text>
+        <Text style={[styles.exportHint, { color: theme.colors.text.secondary }]}>
           Export PDF with profile, all transactions, and insights summary.
         </Text>
         <View style={styles.exportButtonsWrap}>
@@ -399,7 +400,7 @@ export default function InsightsScreen() {
             accessibilityLabel="Export data as CSV"
           />
         </View>
-        {!!exportStatus && <Text style={styles.exportStatus}>{exportStatus}</Text>}
+        {!!exportStatus && <Text style={[styles.exportStatus, { color: theme.colors.primary.dark }]}>{exportStatus}</Text>}
       </WaltrackCard>
     </ScreenWrapper>
   );
@@ -407,148 +408,143 @@ export default function InsightsScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: theme.spacing.s4,
-    gap: theme.spacing.s3,
+    marginBottom: 16,
+    gap: 12,
   },
   title: {
-    ...theme.typography.h2,
-    color: theme.colors.text.primary,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700',
   },
   subtitle: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s1,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 4,
   },
   monthToggle: {
     minHeight: 44,
-    borderRadius: theme.radius.full,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.s3,
-    backgroundColor: theme.colors.background,
+    paddingHorizontal: 12,
   },
   monthToggleText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.primary,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: '700',
   },
   monthPickerCard: {
-    marginBottom: theme.spacing.s4,
-    gap: theme.spacing.s2,
+    marginBottom: 16,
+    gap: 8,
   },
   monthOption: {
     minHeight: 44,
-    borderRadius: theme.radius.md,
+    borderRadius: 8,
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.s3,
+    paddingHorizontal: 12,
   },
   monthOptionActive: {
-    backgroundColor: theme.colors.primary.bg,
+    // Background color applied inline
   },
   monthOptionText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
   monthOptionTextActive: {
-    color: theme.colors.primary.dark,
     fontWeight: '700',
   },
   reportCard: {
-    marginBottom: theme.spacing.s4,
-    gap: theme.spacing.s3,
+    marginBottom: 16,
+    gap: 12,
   },
   metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: theme.spacing.s3,
+    rowGap: 12,
   },
   metricItem: {
     width: '48%',
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.s3,
-    gap: theme.spacing.s1,
+    borderRadius: 8,
+    padding: 12,
+    gap: 4,
     minHeight: 88,
   },
   metricLabel: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    lineHeight: 18,
   },
   metricValue: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.primary,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: '700',
   },
   cardGap: {
-    marginBottom: theme.spacing.s4,
-    gap: theme.spacing.s3,
+    marginBottom: 16,
+    gap: 12,
   },
   cardTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
+    fontSize: 18,
+    lineHeight: 28,
+    fontWeight: '600',
   },
   axisLabel: {
-    color: theme.colors.text.secondary,
     fontSize: 11,
-    marginTop: theme.spacing.s1,
+    marginTop: 4,
   },
   progressTrack: {
     height: 14,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.secondary.lightGray,
+    borderRadius: 7,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primary.DEFAULT,
+    borderRadius: 7,
   },
   progressText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
   centerPieText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.primary,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: '700',
     width: 70,
     textAlign: 'center',
   },
   categoryWrap: {
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 28,
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   categoryDot: {
     width: 10,
     height: 10,
-    borderRadius: theme.radius.full,
+    borderRadius: 5,
   },
   categoryLabel: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
     flex: 1,
   },
   categoryValue: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.primary,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: '700',
   },
   emptyText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
   tipCard: {
-    marginBottom: theme.spacing.s4,
+    marginBottom: 16,
     borderWidth: 0,
   },
   tipGood: {
@@ -561,28 +557,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF2F2',
   },
   tipTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
+    fontSize: 18,
+    lineHeight: 28,
+    fontWeight: '600',
   },
   tipText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s2,
+    fontSize: 13,
+    lineHeight: 20,
   },
   exportCard: {
-    marginBottom: theme.spacing.s8,
-    gap: theme.spacing.s3,
+    marginBottom: 32,
+    gap: 12,
   },
   exportHint: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
   exportButtonsWrap: {
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   exportStatus: {
-    ...theme.typography.bodySm,
-    color: theme.colors.primary.dark,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: '700',
   },
 });

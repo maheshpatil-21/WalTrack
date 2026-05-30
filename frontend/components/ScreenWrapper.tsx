@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Props {
   children: React.ReactNode;
@@ -11,18 +11,38 @@ interface Props {
 }
 
 export function ScreenWrapper({ children, scrollable = true, contentStyle }: Props) {
+  const { theme } = useTheme();
+
+  const safeAreaStyle = {
+    backgroundColor: theme.colors.background,
+  };
+
+  const contentContainerStyle = {
+    ...styles.content,
+    paddingHorizontal: theme.spacing.s6,
+    paddingTop: theme.spacing.s6,
+    paddingBottom: theme.spacing.s6,
+  };
+
+  const contentStaticStyle = {
+    ...styles.contentStatic,
+    paddingHorizontal: theme.spacing.s6,
+    paddingTop: theme.spacing.s6,
+    paddingBottom: theme.spacing.s6,
+  };
+
   if (!scrollable) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={[styles.contentStatic, contentStyle]}>{children}</View>
+      <SafeAreaView style={[styles.safeArea, safeAreaStyle]}>
+        <View style={[contentStaticStyle, contentStyle]}>{children}</View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, safeAreaStyle]}>
       <ScrollView
-        contentContainerStyle={[styles.content, contentStyle]}
+        contentContainerStyle={[contentContainerStyle, contentStyle]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -35,18 +55,11 @@ export function ScreenWrapper({ children, scrollable = true, contentStyle }: Pro
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   content: {
     flexGrow: 1,
-    paddingHorizontal: theme.spacing.s6,
-    paddingTop: theme.spacing.s6,
-    paddingBottom: theme.spacing.s6,
   },
   contentStatic: {
     flex: 1,
-    paddingHorizontal: theme.spacing.s6,
-    paddingTop: theme.spacing.s6,
-    paddingBottom: theme.spacing.s6,
   },
 });

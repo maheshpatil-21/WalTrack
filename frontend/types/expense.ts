@@ -1,3 +1,5 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+
 export const CATEGORY_OPTIONS = [
   'Food',
   'Travel',
@@ -24,7 +26,7 @@ export interface NewExpense {
   note: string;
 }
 
-export const categoryIconMap: Record<Category, string> = {
+export const categoryIconMap: Record<Category, React.ComponentProps<typeof MaterialCommunityIcons>['name']> = {
   Food: 'food-apple-outline',
   Travel: 'airplane',
   Shopping: 'shopping-outline',
@@ -34,8 +36,8 @@ export const categoryIconMap: Record<Category, string> = {
 
 export const categoryColorMap: Record<Category, string> = {
   Food: '#10B981',
-  Travel: '#34D399',
-  Shopping: '#06B6D4',
+  Travel: '#FACC15',
+  Shopping: '#0ccff1',
   Entertainment: '#8B5CF6',
   Others: '#9CA3AF',
 };

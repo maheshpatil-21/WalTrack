@@ -15,7 +15,7 @@ import {
 
 import { ScaleButton } from '../../components/ScaleButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
 import {
   CATEGORY_OPTIONS,
@@ -34,6 +34,7 @@ interface EditForm {
 }
 
 export default function TransactionsScreen() {
+  const { theme } = useTheme();
   const { expenses, deleteExpense, updateExpense, currency } = useExpenseStore();
   const [editForm, setEditForm] = useState<EditForm | null>(null);
 
@@ -70,8 +71,8 @@ export default function TransactionsScreen() {
   return (
     <ScreenWrapper scrollable={false} contentStyle={styles.screenContent}>
       <View style={styles.header}>
-        <Text style={styles.title}>Transactions</Text>
-        <Text style={styles.subtitle}>{sortedExpenses.length} total expenses</Text>
+        <Text style={[styles.title, { color: theme.colors.text.primary }]}>Transactions</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>{sortedExpenses.length} total expenses</Text>
       </View>
 
       <FlatList
@@ -82,12 +83,12 @@ export default function TransactionsScreen() {
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <MaterialCommunityIcons name="wallet-outline" size={80} color={theme.colors.secondary.gray} style={styles.emptyIcon} />
-            <Text style={styles.emptyTitle}>No expenses yet</Text>
-            <Text style={styles.emptySubtitle}>Start by adding your first expense.</Text>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text.primary }]}>No expenses yet</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.colors.text.secondary }]}>Start by adding your first expense.</Text>
           </View>
         }
         renderItem={({ item }) => (
-          <View style={styles.transactionItem}>
+          <View style={[styles.transactionItem, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.background }]}>
             <View style={styles.leftBlock}>
               <View style={[styles.iconWrap, { backgroundColor: `${categoryColorMap[item.category]}20` }]}>
                 <MaterialCommunityIcons
@@ -97,19 +98,19 @@ export default function TransactionsScreen() {
                 />
               </View>
               <View style={styles.textBlock}>
-                <Text style={styles.categoryText}>{item.category}</Text>
-                <Text style={styles.dateText}>{new Date(item.date).toLocaleDateString()}</Text>
-                {item.note ? <Text style={styles.noteText}>{item.note}</Text> : null}
+                <Text style={[styles.categoryText, { color: theme.colors.text.primary }]}>{item.category}</Text>
+                <Text style={[styles.dateText, { color: theme.colors.text.secondary }]}>{new Date(item.date).toLocaleDateString()}</Text>
+                {item.note ? <Text style={[styles.noteText, { color: theme.colors.text.secondary }]}>{item.note}</Text> : null}
               </View>
             </View>
             <View style={styles.rightBlock}>
-              <Text style={styles.amountText}>{formatCurrency(item.amount, currency)}</Text>
+              <Text style={[styles.amountText, { color: theme.colors.text.primary }]}>{formatCurrency(item.amount, currency)}</Text>
               <View style={styles.actionRow}>
                 <Pressable
                   testID={`edit-expense-${item.id}`}
                   accessibilityLabel={`Edit expense ${item.category}`}
                   onPress={() => openEdit(item)}
-                  style={styles.iconButton}
+                  style={[styles.iconButton, { borderColor: theme.colors.secondary.border }]}
                 >
                   <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.colors.primary.dark} />
                 </Pressable>
@@ -117,7 +118,7 @@ export default function TransactionsScreen() {
                   testID={`delete-expense-${item.id}`}
                   accessibilityLabel={`Delete expense ${item.category}`}
                   onPress={() => deleteExpense(item.id)}
-                  style={styles.iconButton}
+                  style={[styles.iconButton, { borderColor: theme.colors.secondary.border }]}
                 >
                   <MaterialCommunityIcons name="trash-can-outline" size={18} color={theme.colors.danger} />
                 </Pressable>
@@ -133,14 +134,14 @@ export default function TransactionsScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.modalKeyboardWrap}
           >
-            <View style={styles.modalCard}>
+            <View style={[styles.modalCard, { backgroundColor: theme.colors.background, borderColor: theme.colors.secondary.border }]}>
               <ScrollView
                 style={styles.modalScroll}
                 contentContainerStyle={styles.modalScrollContent}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.modalTitle}>Edit expense</Text>
+                <Text style={[styles.modalTitle, { color: theme.colors.text.primary }]}>Edit expense</Text>
                 <TextInput
                   testID="edit-amount-input"
                   accessibilityLabel="Edit expense amount"
@@ -156,7 +157,8 @@ export default function TransactionsScreen() {
                         : null
                     )
                   }
-                  style={styles.modalInput}
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  style={[styles.modalInput, { borderColor: theme.colors.secondary.border, color: theme.colors.text.primary }]}
                 />
 
                 <View style={styles.categoryGrid}>
@@ -177,9 +179,17 @@ export default function TransactionsScreen() {
                               : null
                           )
                         }
-                        style={[styles.categoryChip, active && styles.categoryChipActive]}
+                        style={[
+                          styles.categoryChip,
+                          { borderColor: theme.colors.secondary.border },
+                          active && { backgroundColor: theme.colors.primary.bg, borderColor: theme.colors.primary.DEFAULT },
+                        ]}
                       >
-                        <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>{item}</Text>
+                        <Text style={[
+                          styles.categoryChipText,
+                          { color: active ? theme.colors.primary.dark : theme.colors.text.secondary },
+                          active && styles.categoryChipTextActive,
+                        ]}>{item}</Text>
                       </Pressable>
                     );
                   })}
@@ -201,7 +211,7 @@ export default function TransactionsScreen() {
                   }
                   placeholder="Note"
                   placeholderTextColor={theme.colors.text.tertiary}
-                  style={styles.modalInput}
+                  style={[styles.modalInput, { borderColor: theme.colors.secondary.border, color: theme.colors.text.primary }]}
                 />
 
                 <View style={styles.modalActions}>
@@ -231,82 +241,80 @@ export default function TransactionsScreen() {
 
 const styles = StyleSheet.create({
   screenContent: {
-    gap: theme.spacing.s4,
+    gap: 16,
   },
   header: {
-    marginBottom: theme.spacing.s2,
+    marginBottom: 8,
   },
   title: {
-    ...theme.typography.h2,
-    color: theme.colors.text.primary,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700',
   },
   subtitle: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s1,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 4,
   },
   listContent: {
-    paddingBottom: theme.spacing.s12,
-    gap: theme.spacing.s3,
+    paddingBottom: 48,
+    gap: 12,
   },
   transactionItem: {
-    borderRadius: theme.radius.lg,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.s4,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   leftBlock: {
     flexDirection: 'row',
     flex: 1,
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   iconWrap: {
     width: 40,
     height: 40,
-    borderRadius: theme.radius.full,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
   textBlock: {
     flex: 1,
-    gap: theme.spacing.s1,
+    gap: 4,
   },
   categoryText: {
-    ...theme.typography.body,
-    color: theme.colors.text.primary,
+    fontSize: 15,
+    lineHeight: 22,
     fontWeight: '600',
   },
   dateText: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    lineHeight: 18,
   },
   noteText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
   rightBlock: {
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
   amountText: {
-    ...theme.typography.body,
-    color: theme.colors.text.primary,
+    fontSize: 15,
+    lineHeight: 22,
     fontWeight: '700',
   },
   actionRow: {
     flexDirection: 'row',
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   iconButton: {
     width: 44,
     height: 44,
-    borderRadius: theme.radius.full,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -319,79 +327,78 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   emptyTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.s3,
+    fontSize: 18,
+    lineHeight: 28,
+    fontWeight: '600',
+    marginTop: 12,
   },
   emptySubtitle: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s1,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(17,24,39,0.35)',
     justifyContent: 'center',
-    padding: theme.spacing.s4,
+    padding: 16,
   },
   modalKeyboardWrap: {
     width: '100%',
   },
   modalCard: {
-    borderRadius: theme.radius.xl,
-    backgroundColor: theme.colors.background,
+    borderRadius: 20,
     maxHeight: '88%',
-    padding: theme.spacing.s4,
+    padding: 16,
+    borderWidth: 1,
   },
   modalScroll: {
     maxHeight: '100%',
   },
   modalScrollContent: {
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   modalTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
+    fontSize: 18,
+    lineHeight: 28,
+    fontWeight: '600',
   },
   modalInput: {
     minHeight: 48,
-    borderRadius: theme.radius.md,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    paddingHorizontal: theme.spacing.s3,
-    color: theme.colors.text.primary,
-    ...theme.typography.body,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    lineHeight: 22,
   },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   categoryChip: {
     minHeight: 36,
-    borderRadius: theme.radius.full,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.s3,
+    paddingHorizontal: 12,
   },
   categoryChipActive: {
-    borderColor: theme.colors.primary.DEFAULT,
-    backgroundColor: theme.colors.primary.bg,
+    // Color applied inline
   },
   categoryChipText: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    lineHeight: 18,
     fontWeight: '600',
   },
   categoryChipTextActive: {
-    color: theme.colors.primary.dark,
+    // Color applied inline
   },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   modalButton: {
     flex: 1,

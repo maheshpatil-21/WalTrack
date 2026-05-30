@@ -24,12 +24,21 @@ function monthKey(year: number, month: number) {
 }
 
 export function formatCurrency(value: number, currency: Currency) {
+  const EXCHANGE_RATE = 94; // 1 USD = 94 INR
+
+  let convertedValue = value;
+
+  if (currency === 'USD') {
+    convertedValue = value / EXCHANGE_RATE;
+  }
+
   const locale = currency === 'INR' ? 'en-IN' : 'en-US';
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-    maximumFractionDigits: 0,
-  }).format(value);
+    maximumFractionDigits: 2,
+  }).format(convertedValue);
 }
 
 export function getMonthlySpending(expenses: Expense[], baseDate = new Date()) {
@@ -44,29 +53,50 @@ export function getTodaySpending(expenses: Expense[], baseDate = new Date()) {
     .reduce((sum, expense) => sum + expense.amount, 0);
 }
 
-export function getCategoryBreakdown(expenses: Expense[], baseDate = new Date()) {
+export function getCategoryBreakdown(
+  expenses: Expense[],
+  baseDate = new Date()
+) {
+
   const grouped = expenses
-    .filter((expense) => isSameMonth(new Date(expense.date), baseDate))
-    .reduce<Record<Category, number>>(
+    .filter((expense) =>
+      isSameMonth(new Date(expense.date), baseDate)
+    )
+    .reduce<Record<string, number>>(
       (acc, expense) => {
+
+        if (!acc[expense.category]) {
+          acc[expense.category] = 0;
+        }
+
         acc[expense.category] += expense.amount;
+
         return acc;
       },
-      {
-        Food: 0,
-        Travel: 0,
-        Shopping: 0,
-        Entertainment: 0,
-        Others: 0,
-      }
+      {}
     );
 
-  return (Object.keys(grouped) as Category[])
+const dynamicColors = [
+  '#EF4444', // Red
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+  '#14B8A6', // Teal
+  '#F97316', // Orange
+  '#6366F1', // Indigo
+  '#84CC16', // Lime
+];
+
+  return Object.keys(grouped)
     .filter((key) => grouped[key] > 0)
-    .map((key) => ({
+    .map((key, index) => ({
       label: key,
       value: grouped[key],
-      color: categoryColorMap[key],
+      color:
+        categoryColorMap[key as Category] ||
+        dynamicColors[index % dynamicColors.length],
     }));
 }
 

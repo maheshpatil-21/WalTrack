@@ -1,3 +1,4 @@
+import { getSmartInsight } from "../../utils/smartInsights";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { PieChart } from 'react-native-gifted-charts';
 import React, { useMemo, useState } from 'react';
@@ -14,7 +15,7 @@ import {
 
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { WaltrackCard } from '../../components/WaltrackCard';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
 import {
   formatCurrency,
@@ -24,6 +25,7 @@ import {
 } from '../../utils/expenseAnalytics';
 
 export default function DashboardScreen() {
+  const { theme, mode } = useTheme();
   const {
     expenses,
     monthlyBudget,
@@ -32,8 +34,12 @@ export default function DashboardScreen() {
     setMonthlyBudget,
     setDailyLimit,
     setCurrency,
+    addExpense,
     isReady,
   } = useExpenseStore();
+
+  const totalSpend = expenses.reduce((sum,item) => sum + item.amount, 0);
+  const smartInsight = getSmartInsight(totalSpend, monthlyBudget);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState(String(monthlyBudget));
   const [isDailyLimitModalVisible, setIsDailyLimitModalVisible] = useState(false);
@@ -45,7 +51,7 @@ export default function DashboardScreen() {
   const todaySpending = useMemo(() => getTodaySpending(expenses), [expenses]);
   const categoryData = useMemo(() => getCategoryBreakdown(expenses), [expenses]);
 
-  const remainingBalance = Math.max(monthlyBudget - monthlySpending, 0);
+  const remainingBalance = monthlyBudget - monthlySpending;
   const dailyProgress = Math.min(todaySpending / Math.max(dailyLimit, 1), 1);
 
   const saveBudget = async () => {
@@ -82,7 +88,7 @@ export default function DashboardScreen() {
   if (!isReady) {
     return (
       <ScreenWrapper scrollable={false}>
-        <View style={styles.loaderWrap}>
+        <View style={[styles.loaderWrap, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }]}>
           <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
         </View>
       </ScreenWrapper>
@@ -91,23 +97,30 @@ export default function DashboardScreen() {
 
   return (
     <ScreenWrapper>
-      <View style={styles.headerRow}>
+      <View style={[styles.headerRow, { marginBottom: theme.spacing.s4 }]}>
         <View>
-          <Text style={styles.logoText}>
-            Waltrack<Text style={styles.logoDot}>.</Text>
+          <Text style={[styles.logoText, { color: theme.colors.text.primary }]}>
+            Waltrack<Text style={[styles.logoDot, { color: theme.colors.primary.DEFAULT }]}>.</Text>
           </Text>
-          <Text style={styles.subText}>Track smarter, spend wiser</Text>
+          <Text style={[styles.subText, { color: theme.colors.text.secondary, marginTop: theme.spacing.s1 }]}>Track smarter, spend wiser</Text>
         </View>
-        <View style={styles.currencyToggle}>
+        <View style={[styles.currencyToggle, { backgroundColor: theme.colors.secondary.lightGray }]}>
           {(['INR', 'USD'] as const).map((code) => (
             <Pressable
               key={code}
               testID={`currency-${code}`}
               accessibilityLabel={`Switch currency to ${code}`}
               onPress={() => setCurrency(code)}
-              style={[styles.currencyChip, currency === code && styles.currencyChipActive]}
+              style={[
+                styles.currencyChip,
+                currency === code && [styles.currencyChipActive, { backgroundColor: theme.colors.background }]
+              ]}
             >
-              <Text style={[styles.currencyChipText, currency === code && styles.currencyChipTextActive]}>
+              <Text style={[
+                styles.currencyChipText,
+                { color: theme.colors.text.secondary },
+                currency === code && { color: theme.colors.primary.dark }
+              ]}>
                 {code}
               </Text>
             </Pressable>
@@ -115,11 +128,11 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <WaltrackCard style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Remaining balance</Text>
-        <Text style={styles.balanceAmount}>{formatCurrency(remainingBalance, currency)}</Text>
-        <View style={styles.budgetRow}>
-          <Text style={styles.budgetLabel}>Monthly budget</Text>
+      <WaltrackCard style={[styles.balanceCard, { backgroundColor: theme.colors.primary.DEFAULT, borderColor: theme.colors.primary.dark }]}>
+        <Text style={[styles.balanceLabel, { color: theme.colors.text.inverse, opacity: 0.9 }]}>Remaining balance</Text>
+        <Text style={[styles.balanceAmount, { color: theme.colors.text.inverse, marginTop: theme.spacing.s2 }]}>{formatCurrency(remainingBalance, currency)}</Text>
+        <View style={[styles.budgetRow, { marginTop: theme.spacing.s3, gap: theme.spacing.s2 }]}>
+          <Text style={[styles.budgetLabel, { color: theme.colors.text.inverse }]}>Monthly budget</Text>
           {!isEditingBudget ? (
             <Pressable
               testID="edit-budget-button"
@@ -128,44 +141,44 @@ export default function DashboardScreen() {
                 setBudgetInput(String(monthlyBudget));
                 setIsEditingBudget(true);
               }}
-              style={styles.editBudgetButton}
+              style={[styles.editBudgetButton, { backgroundColor: theme.colors.background }]}
             >
               <MaterialCommunityIcons name="pencil-outline" size={16} color={theme.colors.primary.dark} />
-              <Text style={styles.editBudgetText}>{formatCurrency(monthlyBudget, currency)}</Text>
+              <Text style={[styles.editBudgetText, { color: theme.colors.primary.dark }]}>{formatCurrency(monthlyBudget, currency)}</Text>
             </Pressable>
           ) : (
-            <View style={styles.budgetEditWrap}>
+            <View style={[styles.budgetEditWrap, { gap: theme.spacing.s2 }]}>
               <TextInput
                 testID="budget-input"
                 accessibilityLabel="Monthly budget input"
                 value={budgetInput}
                 onChangeText={setBudgetInput}
                 keyboardType="numeric"
-                style={styles.budgetInput}
+                style={[styles.budgetInput, { backgroundColor: theme.colors.background, color: theme.colors.text.primary, borderColor: theme.colors.secondary.border }]}
               />
               <Pressable
                 testID="save-budget-button"
                 accessibilityLabel="Save monthly budget"
                 onPress={saveBudget}
-                style={styles.saveBudgetButton}
+                style={[styles.saveBudgetButton, { backgroundColor: theme.colors.primary.dark }]}
               >
-                <Text style={styles.saveBudgetText}>Save</Text>
+                <Text style={[styles.saveBudgetText, { color: theme.colors.text.inverse }]}>Save</Text>
               </Pressable>
             </View>
           )}
         </View>
       </WaltrackCard>
 
-      <WaltrackCard style={styles.statCard}>
+      <WaltrackCard style={[styles.statCard, { marginBottom: theme.spacing.s4 }]}>
         <View style={styles.rowBetween}>
-          <Text style={styles.cardHeading}>Today’s spending</Text>
-          <Text style={styles.cardValue}>{formatCurrency(todaySpending, currency)}</Text>
+          <Text style={[styles.cardHeading, { color: theme.colors.text.primary }]}>Today’s spending</Text>
+          <Text style={[styles.cardValue, { color: theme.colors.primary.dark }]}>{formatCurrency(todaySpending, currency)}</Text>
         </View>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${dailyProgress * 100}%` }]} />
+        <View style={[styles.progressTrack, { marginTop: theme.spacing.s3, backgroundColor: theme.colors.secondary.lightGray }]}>
+          <View style={[styles.progressFill, { width: `${dailyProgress * 100}%`, backgroundColor: theme.colors.primary.DEFAULT }]} />
         </View>
-        <View style={styles.dailyLimitRow}>
-          <Text style={styles.progressCaption}>
+        <View style={[styles.dailyLimitRow, { marginTop: theme.spacing.s2, gap: theme.spacing.s2 }]}>
+          <Text style={[styles.progressCaption, { color: theme.colors.text.secondary }]}>
             {formatCurrency(todaySpending, currency)} / {formatCurrency(dailyLimit, currency)} daily limit
           </Text>
           <Pressable
@@ -178,14 +191,14 @@ export default function DashboardScreen() {
           </Pressable>
         </View>
         {!!successMessage && (
-          <View style={styles.successToast}>
-            <Text style={styles.successToastText}>{successMessage}</Text>
+          <View style={[styles.successToast, { marginTop: theme.spacing.s2, backgroundColor: theme.colors.primary.bg }]}>
+            <Text style={[styles.successToastText, { color: theme.colors.primary.dark }]}>{successMessage}</Text>
           </View>
         )}
       </WaltrackCard>
 
-      <WaltrackCard style={styles.chartCard}>
-        <Text style={styles.cardHeading}>Category spending (this month)</Text>
+      <WaltrackCard style={[styles.chartCard, { gap: theme.spacing.s4 }]}>
+        <Text style={[styles.cardHeading, { color: theme.colors.text.primary }]}>Category spending (this month)</Text>
         {categoryData.length === 0 ? (
           <View style={styles.emptyWrap}>
             <MaterialCommunityIcons
@@ -194,7 +207,7 @@ export default function DashboardScreen() {
               color={theme.colors.secondary.gray}
               style={styles.emptyIcon}
             />
-            <Text style={styles.emptyText}>No expenses this month yet</Text>
+            <Text style={[styles.emptyText, { color: theme.colors.text.secondary }]}>No expenses this month yet</Text>
           </View>
         ) : (
           <>
@@ -205,21 +218,30 @@ export default function DashboardScreen() {
               innerRadius={56}
               innerCircleColor={theme.colors.background}
               centerLabelComponent={() => (
-                <Text style={styles.centerPieText}>{formatCurrency(monthlySpending, currency)}</Text>
+                <Text style={[styles.centerPieText, { color: theme.colors.text.primary }]}>{formatCurrency(monthlySpending, currency)}</Text>
               )}
             />
-            <View style={styles.legendWrap}>
+            <View style={[styles.legendWrap, { gap: theme.spacing.s2 }]}>
               {categoryData.map((item) => (
                 <View key={item.label} style={styles.legendRow}>
                   <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-                  <Text style={styles.legendLabel}>{item.label}</Text>
-                  <Text style={styles.legendValue}>{formatCurrency(item.value, currency)}</Text>
+                  <Text style={[styles.legendLabel, { color: theme.colors.text.secondary }]}>{item.label}</Text>
+                  <Text style={[styles.legendValue, { color: theme.colors.text.primary }]}>{formatCurrency(item.value, currency)}</Text>
                 </View>
               ))}
             </View>
           </>
         )}
       </WaltrackCard>
+      
+      <View style={[styles.smartInsightCard, { backgroundColor: mode === 'dark' ? theme.colors.primary.bg : '#E6F4Ef', padding: theme.spacing.s4, borderRadius: theme.radius.lg, marginTop: theme.spacing.s4 }]}>
+        <Text style={[{ fontWeight: "600", marginBottom: 4, color: theme.colors.text.primary }]}>
+          Smart Insight
+        </Text>
+        <Text style={[styles.smartInsightText, { color: theme.colors.text.primary }]}>
+          {smartInsight}
+        </Text>
+      </View>
 
       <Modal
         visible={isDailyLimitModalVisible}
@@ -227,10 +249,10 @@ export default function DashboardScreen() {
         animationType="fade"
         onRequestClose={() => setIsDailyLimitModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Edit Daily Limit</Text>
-            <Text style={styles.modalLabel}>Enter new daily limit</Text>
+        <View style={[styles.modalOverlay, { backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(17,24,39,0.35)' }]}>
+          <View style={[styles.modalCard, { backgroundColor: theme.colors.background, borderColor: theme.colors.secondary.border }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.text.primary }]}>Edit Daily Limit</Text>
+            <Text style={[styles.modalLabel, { color: theme.colors.text.secondary }]}>Enter new daily limit</Text>
             <TextInput
               testID="daily-limit-input"
               accessibilityLabel="Enter new daily limit"
@@ -240,26 +262,27 @@ export default function DashboardScreen() {
                 setDailyLimitInput(value.replace(/[^0-9.]/g, ''));
               }}
               keyboardType="numeric"
-              style={styles.modalInput}
+              style={[styles.modalInput, { color: theme.colors.text.primary, borderColor: theme.colors.secondary.border }]}
               placeholder={Platform.OS === 'ios' ? '0' : undefined}
+              placeholderTextColor={theme.colors.text.tertiary}
             />
-            {!!dailyLimitError && <Text style={styles.modalError}>{dailyLimitError}</Text>}
-            <View style={styles.modalActions}>
+            {!!dailyLimitError && <Text style={[styles.modalError, { color: theme.colors.danger }]}>{dailyLimitError}</Text>}
+            <View style={[styles.modalActions, { gap: theme.spacing.s3 }]}>
               <Pressable
                 testID="cancel-daily-limit-button"
                 accessibilityLabel="Cancel daily limit edit"
                 onPress={() => setIsDailyLimitModalVisible(false)}
-                style={[styles.modalButton, styles.modalCancelButton]}
+                style={[styles.modalButton, styles.modalCancelButton, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.background }]}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: theme.colors.text.secondary }]}>Cancel</Text>
               </Pressable>
               <Pressable
                 testID="save-daily-limit-button"
                 accessibilityLabel="Save daily limit"
                 onPress={saveDailyLimit}
-                style={[styles.modalButton, styles.modalSaveButton]}
+                style={[styles.modalButton, styles.modalSaveButton, { backgroundColor: theme.colors.primary.DEFAULT }]}
               >
-                <Text style={styles.modalSaveText}>Save</Text>
+                <Text style={[styles.modalSaveText, { color: theme.colors.text.inverse }]}>Save</Text>
               </Pressable>
             </View>
           </View>
@@ -272,288 +295,268 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   loaderWrap: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.s4,
   },
   logoText: {
-    ...theme.typography.h2,
-    color: theme.colors.text.primary,
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 32,
   },
   logoDot: {
-    color: theme.colors.primary.DEFAULT,
+    fontWeight: '700',
   },
   subText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s1,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
   },
   currencyToggle: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.secondary.lightGray,
-    borderRadius: theme.radius.full,
-    padding: theme.spacing.s1,
+    borderRadius: 9999,
+    padding: 4,
   },
   currencyChip: {
     minHeight: 44,
     minWidth: 56,
-    borderRadius: theme.radius.full,
+    borderRadius: 9999,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.s3,
+    paddingHorizontal: 12,
   },
   currencyChipActive: {
-    backgroundColor: theme.colors.background,
   },
   currencyChipText: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
     fontWeight: '700',
+    lineHeight: 16,
   },
   currencyChipTextActive: {
-    color: theme.colors.primary.dark,
   },
   balanceCard: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    borderColor: theme.colors.primary.dark,
-    marginBottom: theme.spacing.s4,
+    borderWidth: 1,
+    marginBottom: 16,
   },
   balanceLabel: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.inverse,
-    opacity: 0.9,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
   },
   balanceAmount: {
-    ...theme.typography.amount,
-    color: theme.colors.text.inverse,
-    marginTop: theme.spacing.s2,
+    fontSize: 40,
+    fontWeight: '800',
+    lineHeight: 46,
   },
   budgetRow: {
-    marginTop: theme.spacing.s3,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: theme.spacing.s2,
   },
   budgetLabel: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.inverse,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
   },
   editBudgetButton: {
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.s2,
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.s3,
-    borderRadius: theme.radius.full,
+    paddingHorizontal: 12,
+    borderRadius: 9999,
   },
   editBudgetText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.primary.dark,
+    fontSize: 14,
     fontWeight: '700',
+    lineHeight: 20,
+    marginLeft: 8,
   },
   budgetEditWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.s2,
   },
   budgetInput: {
     minHeight: 44,
     minWidth: 96,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.s3,
-    color: theme.colors.text.primary,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    fontSize: 16,
   },
   saveBudgetButton: {
     minHeight: 44,
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.s3,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primary.dark,
+    paddingHorizontal: 12,
+    borderRadius: 9999,
   },
   saveBudgetText: {
-    color: theme.colors.text.inverse,
     fontWeight: '700',
   },
   statCard: {
-    marginBottom: theme.spacing.s4,
   },
   rowBetween: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   cardHeading: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 28,
   },
   cardValue: {
-    ...theme.typography.body,
-    color: theme.colors.primary.dark,
+    fontSize: 16,
     fontWeight: '700',
+    lineHeight: 24,
   },
   progressTrack: {
     height: 14,
-    marginTop: theme.spacing.s3,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.secondary.lightGray,
+    borderRadius: 9999,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: theme.colors.primary.DEFAULT,
-    borderRadius: theme.radius.full,
+    borderRadius: 9999,
   },
   progressCaption: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
   },
   dailyLimitRow: {
-    marginTop: theme.spacing.s2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: theme.spacing.s2,
   },
   dailyLimitEditButton: {
     width: 24,
     height: 24,
-    borderRadius: theme.radius.full,
+    borderRadius: 9999,
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0.8,
   },
   successToast: {
-    marginTop: theme.spacing.s2,
     alignSelf: 'flex-start',
-    backgroundColor: '#ECFDF5',
-    borderRadius: theme.radius.full,
-    paddingVertical: theme.spacing.s1,
-    paddingHorizontal: theme.spacing.s3,
+    borderRadius: 9999,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
   },
   successToastText: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.primary.dark,
+    fontSize: 12,
     fontWeight: '600',
+    lineHeight: 16,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(17,24,39,0.35)',
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.s6,
+    paddingHorizontal: 24,
   },
   modalCard: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.xl,
-    padding: theme.spacing.s4,
+    borderRadius: 24,
+    padding: 16,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    gap: theme.spacing.s3,
+    gap: 12,
   },
   modalTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 28,
   },
   modalLabel: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
   },
   modalInput: {
     minHeight: 48,
-    borderRadius: theme.radius.md,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    paddingHorizontal: theme.spacing.s3,
-    color: theme.colors.text.primary,
-    ...theme.typography.body,
+    paddingHorizontal: 12,
+    fontSize: 16,
   },
   modalError: {
-    ...theme.typography.bodyXs,
-    color: theme.colors.danger,
+    fontSize: 12,
+    lineHeight: 16,
   },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: theme.spacing.s3,
   },
   modalButton: {
     flex: 1,
     minHeight: 44,
-    borderRadius: theme.radius.full,
+    borderRadius: 9999,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalCancelButton: {
     borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    backgroundColor: theme.colors.background,
   },
   modalSaveButton: {
-    backgroundColor: theme.colors.primary.DEFAULT,
   },
   modalCancelText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
     fontWeight: '700',
+    lineHeight: 20,
   },
   modalSaveText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.inverse,
+    fontSize: 14,
     fontWeight: '700',
+    lineHeight: 20,
   },
   chartCard: {
-    gap: theme.spacing.s4,
   },
   emptyWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.s8,
+    paddingVertical: 32,
   },
   emptyIcon: {
     opacity: 0.3,
   },
   emptyText: {
-    ...theme.typography.body,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.s2,
+    fontSize: 16,
+    fontWeight: '400',
+    lineHeight: 24,
+    marginTop: 8,
   },
   centerPieText: {
-    ...theme.typography.bodySm,
+    fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.text.primary,
     textAlign: 'center',
     width: 70,
   },
   legendWrap: {
-    gap: theme.spacing.s2,
   },
   legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 28,
-    gap: theme.spacing.s2,
+    gap: 8,
   },
   legendDot: {
     width: 10,
     height: 10,
-    borderRadius: theme.radius.full,
+    borderRadius: 9999,
   },
   legendLabel: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
     flex: 1,
   },
   legendValue: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.primary,
+    fontSize: 14,
     fontWeight: '700',
+    lineHeight: 20,
+  },
+  smartInsightCard: {
+  },
+  smartInsightText: {
+    fontSize: 16,
   },
 });

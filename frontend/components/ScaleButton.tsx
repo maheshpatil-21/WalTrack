@@ -6,7 +6,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Props {
   label: string;
@@ -25,11 +25,33 @@ export function ScaleButton({
   testID,
   accessibilityLabel,
 }: Props) {
+  const { theme } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  const buttonStyle = {
+    minHeight: 48,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primary.DEFAULT,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: theme.spacing.s6,
+    paddingVertical: theme.spacing.s3,
+  };
+
+  const disabledButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: theme.colors.secondary.border,
+  };
+
+  const textStyle = {
+    color: theme.colors.text.inverse,
+    fontSize: 16,
+    fontWeight: '700' as const,
+  };
 
   return (
     <Animated.View style={[animatedStyle, style]}>
@@ -45,36 +67,13 @@ export function ScaleButton({
           scale.value = withSpring(1, { damping: 13, stiffness: 220 });
         }}
         style={({ pressed }) => [
-          styles.button,
-          pressed && !disabled && styles.buttonPressed,
-          disabled && styles.buttonDisabled,
+          buttonStyle,
+          pressed && !disabled && { opacity: 0.92 },
+          disabled && disabledButtonStyle,
         ]}
       >
-        <Text style={styles.text}>{label}</Text>
+        <Text style={textStyle}>{label}</Text>
       </Pressable>
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    minHeight: 48,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primary.DEFAULT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.s6,
-    paddingVertical: theme.spacing.s3,
-  },
-  buttonPressed: {
-    opacity: 0.92,
-  },
-  buttonDisabled: {
-    backgroundColor: theme.colors.secondary.border,
-  },
-  text: {
-    color: theme.colors.text.inverse,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});

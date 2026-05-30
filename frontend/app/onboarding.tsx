@@ -12,11 +12,12 @@ import {
 import { ScaleButton } from '../components/ScaleButton';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { WaltrackCard } from '../components/WaltrackCard';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useExpenseStore } from '../hooks/useExpenseStore';
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const { setUserProfile } = useExpenseStore();
 
   const [name, setName] = useState('');
@@ -49,6 +50,54 @@ export default function OnboardingScreen() {
     });
     router.replace('/dashboard');
   };
+
+  const styles = StyleSheet.create({
+    container: {
+      justifyContent: 'center',
+    },
+    keyboardWrap: {
+      gap: theme.spacing.s6,
+    },
+    headerWrap: {
+      gap: theme.spacing.s2,
+    },
+    logoText: {
+      ...theme.typography.h1,
+      color: theme.colors.text.primary,
+    },
+    logoDot: {
+      color: theme.colors.primary.DEFAULT,
+    },
+    subtitle: {
+      ...theme.typography.body,
+      color: theme.colors.text.secondary,
+    },
+    formCard: {
+      gap: theme.spacing.s4,
+      borderRadius: theme.radius.xl,
+    },
+    fieldWrap: {
+      gap: theme.spacing.s2,
+    },
+    label: {
+      ...theme.typography.bodySm,
+      color: theme.colors.text.secondary,
+      fontWeight: '600',
+    },
+    input: {
+      minHeight: 48,
+      borderWidth: 1,
+      borderColor: theme.colors.secondary.border,
+      borderRadius: theme.radius.md,
+      paddingHorizontal: theme.spacing.s3,
+      color: theme.colors.text.primary,
+      ...theme.typography.body,
+    },
+    errorText: {
+      ...theme.typography.bodySm,
+      color: theme.colors.danger,
+    },
+  });
 
   return (
     <ScreenWrapper scrollable={false} contentStyle={styles.container}>
@@ -138,51 +187,3 @@ export default function OnboardingScreen() {
     </ScreenWrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-  },
-  keyboardWrap: {
-    gap: theme.spacing.s6,
-  },
-  headerWrap: {
-    gap: theme.spacing.s2,
-  },
-  logoText: {
-    ...theme.typography.h1,
-    color: theme.colors.text.primary,
-  },
-  logoDot: {
-    color: theme.colors.primary.DEFAULT,
-  },
-  subtitle: {
-    ...theme.typography.body,
-    color: theme.colors.text.secondary,
-  },
-  formCard: {
-    gap: theme.spacing.s4,
-    borderRadius: theme.radius.xl,
-  },
-  fieldWrap: {
-    gap: theme.spacing.s2,
-  },
-  label: {
-    ...theme.typography.bodySm,
-    color: theme.colors.text.secondary,
-    fontWeight: '600',
-  },
-  input: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: theme.colors.secondary.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.s3,
-    color: theme.colors.text.primary,
-    ...theme.typography.body,
-  },
-  errorText: {
-    ...theme.typography.bodySm,
-    color: theme.colors.danger,
-  },
-});

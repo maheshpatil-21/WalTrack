@@ -1,16 +1,18 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
 
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
 
 export default function TabsLayout() {
-  const { isReady, userProfile } = useExpenseStore();
+  const { isReady, userProfile, addExpense } = useExpenseStore();
+  const { theme } = useTheme();
 
   if (!isReady) {
     return (
-      <View style={styles.loaderWrap}>
+      <View style={[styles.loaderWrap, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
       </View>
     );
@@ -28,7 +30,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.colors.primary.DEFAULT,
         tabBarInactiveTintColor: theme.colors.secondary.gray,
         tabBarStyle: {
-          backgroundColor: theme.colors.background,
+          backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.secondary.border,
           height: 68,
           paddingTop: 6,
@@ -99,6 +101,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
   },
 });
