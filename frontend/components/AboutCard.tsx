@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, LayoutChangeEvent, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 
@@ -35,6 +35,10 @@ export function AboutCard() {
     { label: 'Privacy Policy', onPress: () => router.push('/privacy-policy') },
     { label: 'Terms & Conditions', onPress: () => router.push('/terms-conditions') },
     { label: 'Contact Us', onPress: () => router.push('/contact-us') },
+    {
+      label: 'Send Feedback',
+      onPress: () => Linking.openURL('https://forms.gle/Umn63tAkxqViUM5x7'),
+    },
   ];
 
   return (
