@@ -1,7 +1,7 @@
 import { getSmartInsight } from "../../utils/smartInsights";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { PieChart } from 'react-native-gifted-charts';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -23,6 +23,7 @@ import {
   getMonthlySpending,
   getTodaySpending,
 } from '../../utils/expenseAnalytics';
+import { logDashboardView } from '../../utils/analytics';
 
 export default function DashboardScreen() {
   const { theme, mode } = useTheme();
@@ -34,9 +35,12 @@ export default function DashboardScreen() {
     setMonthlyBudget,
     setDailyLimit,
     setCurrency,
-    addExpense,
     isReady,
   } = useExpenseStore();
+
+  useEffect(() => {
+    void logDashboardView();
+  }, []);
 
   const totalSpend = expenses.reduce((sum,item) => sum + item.amount, 0);
   const smartInsight = getSmartInsight(totalSpend, monthlyBudget);

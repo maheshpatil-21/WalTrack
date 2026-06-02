@@ -16,6 +16,7 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
 import { CATEGORY_OPTIONS, Category, categoryIconMap } from '../../types/expense';
+import { logAddExpense } from '../../utils/analytics';
 
 export default function AddExpenseScreen() {
   const { theme } = useTheme();
@@ -37,6 +38,8 @@ export default function AddExpenseScreen() {
       category,
       note: note.trim(),
     });
+
+    void logAddExpense();
 
     setError('');
     setAmountInput('');

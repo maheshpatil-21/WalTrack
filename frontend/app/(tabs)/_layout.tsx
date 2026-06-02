@@ -1,13 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useEffect } from 'react';
 
 import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
 
 export default function TabsLayout() {
-  const { isReady, userProfile, addExpense } = useExpenseStore();
+  const { isReady, userProfile } = useExpenseStore();
   const { theme } = useTheme();
 
   if (!isReady) {

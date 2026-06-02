@@ -1,8 +1,7 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Linking } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ScaleButton } from '../components/ScaleButton';
 import { ScreenWrapper } from '../components/ScreenWrapper';

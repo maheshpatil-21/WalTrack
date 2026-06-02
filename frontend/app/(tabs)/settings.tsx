@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Notifications from 'expo-notifications';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   Platform,
@@ -15,9 +15,10 @@ import {
 import { ScaleButton } from '../../components/ScaleButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { WaltrackCard } from '../../components/WaltrackCard';
-import AboutCard from '../../components/AboutCard';
+import { AboutCard } from '../../components/AboutCard';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ReminderSettings, useExpenseStore } from '../../hooks/useExpenseStore';
+import { logSettingsView } from '../../utils/analytics';
 
 function formatReminderTime(hour: number, minute: number, period: 'AM' | 'PM') {
   return `${hour}:${String(minute).padStart(2, '0')} ${period}`;
@@ -33,6 +34,10 @@ function convertTo24Hour(hour: number, period: 'AM' | 'PM') {
 export default function SettingsScreen() {
   const { mode, theme, setTheme } = useTheme();
   const { userProfile, reminderSettings, setReminderSettings } = useExpenseStore();
+
+  useEffect(() => {
+    void logSettingsView();
+  }, []);
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [hourInput, setHourInput] = useState(String(reminderSettings.hour));
   const [minuteInput, setMinuteInput] = useState(String(reminderSettings.minute).padStart(2, '0'));
