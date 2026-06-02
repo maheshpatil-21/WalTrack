@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { ExpenseProvider } from '../hooks/useExpenseStore';
+import { trackFirstInstall } from '../utils/installTracking';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -41,6 +42,10 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    void trackFirstInstall();
+  }, []);
+
   return (
     <ThemeProvider>
       <ExpenseProvider>
