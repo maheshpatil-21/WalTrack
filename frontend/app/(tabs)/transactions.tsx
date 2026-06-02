@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -25,7 +25,6 @@ import {
   categoryColorMap,
 } from '../../types/expense';
 import { formatCurrency } from '../../utils/expenseAnalytics';
-import { logTransactionsView } from '../../utils/analytics';
 
 interface EditForm {
   id: string;
@@ -38,9 +37,6 @@ export default function TransactionsScreen() {
   const { theme } = useTheme();
   const { expenses, deleteExpense, updateExpense, currency } = useExpenseStore();
 
-  useEffect(() => {
-    void logTransactionsView();
-  }, []);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
 
   const sortedExpenses = useMemo(

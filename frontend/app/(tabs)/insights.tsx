@@ -11,7 +11,6 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { WaltrackCard } from '../../components/WaltrackCard';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
-import { logInsightsView } from '../../utils/analytics';
 import {
   formatCurrency,
   getAverageDailySpending,
@@ -37,9 +36,6 @@ export default function InsightsScreen() {
   const { theme } = useTheme();
   const { expenses, monthlyBudget, currency, userProfile } = useExpenseStore();
 
-  useEffect(() => {
-    void logInsightsView();
-  }, []);
   const { width } = useWindowDimensions();
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
   const [selectedMonthKey, setSelectedMonthKey] = useState('');

@@ -23,7 +23,6 @@ import {
   getMonthlySpending,
   getTodaySpending,
 } from '../../utils/expenseAnalytics';
-import { logDashboardView } from '../../utils/analytics';
 
 export default function DashboardScreen() {
   const { theme, mode } = useTheme();
@@ -37,10 +36,6 @@ export default function DashboardScreen() {
     setCurrency,
     isReady,
   } = useExpenseStore();
-
-  useEffect(() => {
-    void logDashboardView();
-  }, []);
 
   const totalSpend = expenses.reduce((sum,item) => sum + item.amount, 0);
   const smartInsight = getSmartInsight(totalSpend, monthlyBudget);

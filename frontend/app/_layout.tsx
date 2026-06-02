@@ -5,7 +5,6 @@ import { Platform } from 'react-native';
 
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { ExpenseProvider } from '../hooks/useExpenseStore';
-import { logAppOpen } from '../utils/analytics';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -42,10 +41,6 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
-  useEffect(() => {
-    void logAppOpen();
-  }, []);
-
   return (
     <ThemeProvider>
       <ExpenseProvider>
