@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Edge, SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -8,9 +8,23 @@ interface Props {
   children: React.ReactNode;
   scrollable?: boolean;
   contentStyle?: ViewStyle;
+  /**
+   * Safe area edges to apply. Defaults to all edges so screen content is
+   * inset correctly on devices with bottom home indicators and on Android
+   * edge-to-edge displays.
+   */
+  edges?: Edge[];
 }
 
-export function ScreenWrapper({ children, scrollable = true, contentStyle }: Props) {
+// Default edges include bottom so content cannot extend under the bottom tab bar.
+const DEFAULT_EDGES: Edge[] = ['top', 'left', 'right', 'bottom'];
+
+export function ScreenWrapper({
+  children,
+  scrollable = true,
+  contentStyle,
+  edges = DEFAULT_EDGES,
+}: Props) {
   const { theme } = useTheme();
 
   const safeAreaStyle = {
@@ -33,14 +47,14 @@ export function ScreenWrapper({ children, scrollable = true, contentStyle }: Pro
 
   if (!scrollable) {
     return (
-      <SafeAreaView style={[styles.safeArea, safeAreaStyle]}>
+      <SafeAreaView edges={edges} style={[styles.safeArea, safeAreaStyle]}>
         <View style={[contentStaticStyle, contentStyle]}>{children}</View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, safeAreaStyle]}>
+    <SafeAreaView edges={edges} style={[styles.safeArea, safeAreaStyle]}>
       <ScrollView
         contentContainerStyle={[contentContainerStyle, contentStyle]}
         showsVerticalScrollIndicator={false}

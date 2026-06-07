@@ -100,7 +100,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
             monthlyBudget: parsed.monthlyBudget ?? 10000,
             dailyLimit:
               parsed.dailyLimit ?? defaultDailyLimit(parsed.monthlyBudget ?? initialState.monthlyBudget),
-            currency: parsed.currency ?? 'INR',
+            currency: 'INR',
             userProfile: parsed.userProfile ?? null,
             reminderSettings: {
               enabled: parsed.reminderSettings?.enabled ?? defaultReminderSettings.enabled,
@@ -146,6 +146,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
           amount: nextExpense.amount,
           category: nextExpense.category,
           note: nextExpense.note,
+          date: nextExpense.date ?? expense.date,
         };
       }),
     }));

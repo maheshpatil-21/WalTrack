@@ -77,8 +77,8 @@ export default function InsightsScreen() {
   const highestCategory = useMemo(() => getHighestCategory(categoryBreakdown), [categoryBreakdown]);
 
   const averageDailySpending = useMemo(
-    () => getAverageDailySpending(monthlySpending, selectedMonthDate.getFullYear(), selectedMonthDate.getMonth()),
-    [monthlySpending, selectedMonthDate]
+    () => getAverageDailySpending(monthExpenses, selectedMonthDate.getFullYear(), selectedMonthDate.getMonth()),
+    [monthExpenses, selectedMonthDate]
   );
 
   const weeklySeries = useMemo(() => getWeeklySpendingForMonth(monthExpenses), [monthExpenses]);

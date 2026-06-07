@@ -10,7 +10,7 @@ export const CATEGORY_OPTIONS = [
 
 export type Category = (typeof CATEGORY_OPTIONS)[number];
 
-export type Currency = 'INR' | 'USD';
+export type Currency = 'INR';
 
 export interface Expense {
   id: string;
@@ -24,6 +24,7 @@ export interface NewExpense {
   amount: number;
   category: Category;
   note: string;
+  date?: string;
 }
 
 export const categoryIconMap: Record<Category, React.ComponentProps<typeof MaterialCommunityIcons>['name']> = {

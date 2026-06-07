@@ -1,7 +1,8 @@
 import { getSmartInsight } from "../../utils/smartInsights";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { PieChart } from 'react-native-gifted-charts';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -13,6 +14,7 @@ import {
   View,
 } from 'react-native';
 
+import { ScaleButton } from '../../components/ScaleButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { WaltrackCard } from '../../components/WaltrackCard';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -25,6 +27,7 @@ import {
 } from '../../utils/expenseAnalytics';
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const { theme, mode } = useTheme();
   const {
     expenses,
@@ -37,8 +40,8 @@ export default function DashboardScreen() {
     isReady,
   } = useExpenseStore();
 
-  const totalSpend = expenses.reduce((sum,item) => sum + item.amount, 0);
-  const smartInsight = getSmartInsight(totalSpend, monthlyBudget);
+  const monthlySpending = useMemo(() => getMonthlySpending(expenses), [expenses]);
+  const smartInsight = getSmartInsight(monthlySpending, monthlyBudget);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState(String(monthlyBudget));
   const [isDailyLimitModalVisible, setIsDailyLimitModalVisible] = useState(false);
@@ -46,7 +49,6 @@ export default function DashboardScreen() {
   const [dailyLimitError, setDailyLimitError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const monthlySpending = useMemo(() => getMonthlySpending(expenses), [expenses]);
   const todaySpending = useMemo(() => getTodaySpending(expenses), [expenses]);
   const categoryData = useMemo(() => getCategoryBreakdown(expenses), [expenses]);
 
@@ -104,7 +106,7 @@ export default function DashboardScreen() {
           <Text style={[styles.subText, { color: theme.colors.text.secondary, marginTop: theme.spacing.s1 }]}>Track smarter, spend wiser</Text>
         </View>
         <View style={[styles.currencyToggle, { backgroundColor: theme.colors.secondary.lightGray }]}>
-          {(['INR', 'USD'] as const).map((code) => (
+          {(['INR'] as const).map((code) => (
             <Pressable
               key={code}
               testID={`currency-${code}`}
@@ -128,9 +130,19 @@ export default function DashboardScreen() {
       </View>
 
       <WaltrackCard style={[styles.balanceCard, { backgroundColor: theme.colors.primary.DEFAULT, borderColor: theme.colors.primary.dark }]}>
-        <Text style={[styles.balanceLabel, { color: theme.colors.text.inverse, opacity: 0.9 }]}>Remaining balance</Text>
+        <Text style={[styles.balanceLabel, { color: theme.colors.text.inverse, opacity: 0.9 }]}>Remaining Budget</Text>
         <Text style={[styles.balanceAmount, { color: theme.colors.text.inverse, marginTop: theme.spacing.s2 }]}>{formatCurrency(remainingBalance, currency)}</Text>
-        <View style={[styles.budgetRow, { marginTop: theme.spacing.s3, gap: theme.spacing.s2 }]}>
+        <View style={[styles.balanceStatsRow, { marginTop: theme.spacing.s4 }]}> 
+          <View style={styles.balanceStatBox}>
+            <Text style={[styles.balanceStatLabel, { color: theme.colors.text.inverse }]}>Budget</Text>
+            <Text style={[styles.balanceStatValue, { color: theme.colors.text.inverse }]}>{formatCurrency(monthlyBudget, currency)}</Text>
+          </View>
+          <View style={styles.balanceStatBox}>
+            <Text style={[styles.balanceStatLabel, { color: theme.colors.text.inverse }]}>Total Spend</Text>
+            <Text style={[styles.balanceStatValue, { color: theme.colors.text.inverse }]}>{formatCurrency(monthlySpending, currency)}</Text>
+          </View>
+        </View>
+        <View style={[styles.budgetRow, { marginTop: theme.spacing.s3, gap: theme.spacing.s2 }]}> 
           <Text style={[styles.budgetLabel, { color: theme.colors.text.inverse }]}>Monthly budget</Text>
           {!isEditingBudget ? (
             <Pressable
@@ -146,7 +158,7 @@ export default function DashboardScreen() {
               <Text style={[styles.editBudgetText, { color: theme.colors.primary.dark }]}>{formatCurrency(monthlyBudget, currency)}</Text>
             </Pressable>
           ) : (
-            <View style={[styles.budgetEditWrap, { gap: theme.spacing.s2 }]}>
+            <View style={[styles.budgetEditWrap, { gap: theme.spacing.s2 }]}> 
               <TextInput
                 testID="budget-input"
                 accessibilityLabel="Monthly budget input"
@@ -166,9 +178,16 @@ export default function DashboardScreen() {
             </View>
           )}
         </View>
+        <ScaleButton
+          label="Add expense"
+          onPress={() => router.push('/add-expense')}
+          testID="dashboard-add-expense"
+          accessibilityLabel="Add a new expense"
+          style={styles.addExpenseButton}
+        />
       </WaltrackCard>
 
-      <WaltrackCard style={[styles.statCard, { marginBottom: theme.spacing.s4 }]}>
+      <WaltrackCard style={[styles.statCard, { marginBottom: theme.spacing.s4 }]}> 
         <View style={styles.rowBetween}>
           <Text style={[styles.cardHeading, { color: theme.colors.text.primary }]}>Today’s spending</Text>
           <Text style={[styles.cardValue, { color: theme.colors.primary.dark }]}>{formatCurrency(todaySpending, currency)}</Text>
@@ -206,7 +225,15 @@ export default function DashboardScreen() {
               color={theme.colors.secondary.gray}
               style={styles.emptyIcon}
             />
-            <Text style={[styles.emptyText, { color: theme.colors.text.secondary }]}>No expenses this month yet</Text>
+            <Text style={[styles.emptyText, { color: theme.colors.text.primary }]}>No category spending yet</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.colors.text.secondary }]}>Add a few expenses to unlock your monthly spending breakdown and category insights.</Text>
+            <ScaleButton
+              label="Add first expense"
+              onPress={() => router.push('/add-expense')}
+              testID="chart-empty-add-expense"
+              accessibilityLabel="Add first expense"
+              style={styles.emptyActionButton}
+            />
           </View>
         ) : (
           <>
@@ -437,6 +464,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0.8,
+  },
+  balanceStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  balanceStatBox: {
+    flex: 1,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    padding: 12,
+  },
+  balanceStatLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    opacity: 0.85,
+  },
+  balanceStatValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 6,
+  },
+  addExpenseButton: {
+    marginTop: 20,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    maxWidth: 240,
+    marginTop: 10,
+  },
+  emptyActionButton: {
+    marginTop: 18,
+    alignSelf: 'center',
   },
   successToast: {
     alignSelf: 'flex-start',

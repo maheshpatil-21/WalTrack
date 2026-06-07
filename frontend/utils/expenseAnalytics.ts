@@ -24,21 +24,13 @@ function monthKey(year: number, month: number) {
 }
 
 export function formatCurrency(value: number, currency: Currency) {
-  const EXCHANGE_RATE = 94; // 1 USD = 94 INR
-
-  let convertedValue = value;
-
-  if (currency === 'USD') {
-    convertedValue = value / EXCHANGE_RATE;
-  }
-
-  const locale = currency === 'INR' ? 'en-IN' : 'en-US';
+  const locale = 'en-IN';
 
   return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency,
+    currency: 'INR',
     maximumFractionDigits: 2,
-  }).format(convertedValue);
+  }).format(value);
 }
 
 export function getMonthlySpending(expenses: Expense[], baseDate = new Date()) {
@@ -202,9 +194,20 @@ export function getHighestCategory(categoryData: { label: string; value: number 
   return categoryData.reduce((prev, current) => (current.value > prev.value ? current : prev), categoryData[0]);
 }
 
-export function getAverageDailySpending(total: number, year: number, month: number) {
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  return daysInMonth > 0 ? total / daysInMonth : 0;
+export function getAverageDailySpending(expenses: Expense[], year: number, month: number) {
+  const monthExpenses = expenses.filter((expense) => {
+    const d = new Date(expense.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  if (monthExpenses.length === 0) {
+    return 0;
+  }
+
+  const uniqueDays = new Set(monthExpenses.map((e) => new Date(e.date).toDateString())).size;
+  const total = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+  return uniqueDays > 0 ? total / uniqueDays : 0;
 }
 
 export function getWeeklySpendingForMonth(expenses: Expense[]) {

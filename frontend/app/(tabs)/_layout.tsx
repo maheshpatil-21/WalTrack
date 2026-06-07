@@ -1,11 +1,13 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseStore } from '../../hooks/useExpenseStore';
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
   const { isReady, userProfile } = useExpenseStore();
   const { theme } = useTheme();
 
@@ -31,9 +33,11 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.secondary.border,
-          height: 68,
-          paddingTop: 6,
-          paddingBottom: 10,
+          // Slightly more compact bar height while preserving bottom safe area.
+          height: 54 + insets.bottom,
+          // Reduce internal vertical padding to better center the icon/label stack.
+          paddingTop: 4,
+          paddingBottom: Math.max(insets.bottom, 4),
         },
         tabBarLabelStyle: {
           fontSize: 12,
