@@ -1,10 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useMemo, useState } from 'react';
 import {
+  Platform,
   SectionList,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -51,6 +51,11 @@ export default function TransactionsScreen() {
 
   const [categoryFilter, setCategoryFilter] = useState<Category | 'All'>('All');
   const [dateFilter, setDateFilter] = useState<'All Time' | 'Today' | 'Yesterday' | 'This Week' | 'This Month'>('All Time');
+
+  const [draftCategoryFilter, setDraftCategoryFilter] = useState<Category | 'All'>('All');
+  const [draftDateFilter, setDraftDateFilter] = useState<'All Time' | 'Today' | 'Yesterday' | 'This Week' | 'This Month'>('All Time');
+
+  const [filtersScreen, setFiltersScreen] = useState<'main' | 'category' | 'date'>('main');
 
   const sortedExpenses = useMemo(
     () => [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
@@ -185,8 +190,9 @@ export default function TransactionsScreen() {
       </View>
 
       <View style={styles.filtersWrap}>
+        {/* Search + Filter in the SAME row */}
         <View style={styles.searchAndFilterRow}>
-          <View style={[styles.searchBar, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.surface }]}>
+          <View style={[styles.searchInputBox, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.surface }]}>
             <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.text.secondary} />
             <TextInput
               testID="transactions-search-input"
@@ -212,35 +218,161 @@ export default function TransactionsScreen() {
           <Pressable
             testID="transactions-filters-button"
             accessibilityLabel="Open filters"
-            onPress={() => setIsFiltersModalOpen(true)}
-            style={[styles.filtersIconButton, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.surface }]}
+            onPress={() => {
+              setDraftCategoryFilter(categoryFilter);
+              setDraftDateFilter(dateFilter);
+              setFiltersScreen('category');
+              setIsFiltersModalOpen(true);
+            }}
+            style={[
+              styles.filtersIconButton,
+              { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.surface },
+            ]}
           >
             <MaterialCommunityIcons name="tune-variant" size={18} color={theme.colors.text.secondary} />
           </Pressable>
         </View>
 
+        {/* Applied filters indicator below search */}
         {(categoryFilter !== 'All' || dateFilter !== 'All Time') ? (
           <Pressable
             testID="transactions-filters-indicator"
-            accessibilityLabel="Active filters"
+            accessibilityLabel="Applied filters indicator"
             onPress={() => {
-              if (categoryFilter !== 'All' || dateFilter !== 'All Time') {
-                setCategoryFilter('All');
-                setDateFilter('All Time');
-              }
+              setCategoryFilter('All');
+              setDateFilter('All Time');
             }}
-            style={[styles.filtersIndicatorWrap, { borderColor: theme.colors.secondary.border }]}
+            style={styles.filtersIndicatorWrap}
           >
-            <Text style={[styles.filtersIndicatorText, { color: theme.colors.text.primary }]}>
+            <Text style={[styles.filtersIndicatorText, { color: theme.colors.text.primary }]}> 
               {(() => {
                 const count = (categoryFilter !== 'All' ? 1 : 0) + (dateFilter !== 'All Time' ? 1 : 0);
-                if (count === 1) return '1 Filter Applied';
-                return `${count} Filters Applied ✕`;
+                if (count === 1) return '1 Filter Applied ✕';
+                return '2 Filters Applied ✕';
               })()}
             </Text>
           </Pressable>
         ) : null}
       </View>
+
+      {/* Full-screen Filters UI */}
+      <Modal visible={isFiltersModalOpen} transparent animationType="slide" onRequestClose={() => setIsFiltersModalOpen(false)}>
+        <View style={styles.filtersOverlay}>
+          <View style={[styles.filtersSheet, { backgroundColor: theme.colors.background, borderColor: theme.colors.secondary.border }]}>
+            {/* Header */}
+            <View style={styles.filtersHeader}>
+              <Pressable
+                testID="transactions-filters-back"
+                accessibilityLabel="Back to filters"
+                onPress={() => {
+                  if (filtersScreen === 'date') setFiltersScreen('category');
+                  else setFiltersScreen('category');
+                }}
+                style={styles.filtersBackButton}
+              >
+                <Text style={[styles.filtersHeaderText, { color: theme.colors.text.primary }]}>←</Text>
+              </Pressable>
+
+              <Text style={[styles.filtersTitle, { color: theme.colors.text.primary }]}>Filters</Text>
+
+              <Pressable
+                testID="transactions-filters-clear-all"
+                accessibilityLabel="Clear all filters"
+                onPress={() => {
+                  setDraftCategoryFilter('All');
+                  setDraftDateFilter('All Time');
+                }}
+                style={styles.filtersClearAllButton}
+              >
+                <Text style={[styles.filtersClearAllText, { color: theme.colors.primary.DEFAULT }]}>Clear All</Text>
+              </Pressable>
+            </View>
+
+            {/* Content */}
+            <View style={styles.filtersContent}>
+              {filtersScreen === 'category' ? (
+                <View style={styles.filtersSection}>
+                  <Text style={[styles.filtersSectionLabel, { color: theme.colors.text.secondary }]}>Category</Text>
+                  {(['All', 'Food', 'Travel', 'Shopping', 'Entertainment', 'Others'] as Array<Category | 'All'>).map((opt) => {
+                    const active = draftCategoryFilter === opt;
+                    return (
+                      <Pressable
+                        key={opt}
+                        testID={`transactions-filter-category-${opt}`}
+                        accessibilityLabel={`Select category ${opt}`}
+                        onPress={() => setDraftCategoryFilter(opt)}
+                        style={[styles.filterOptionRow, { borderColor: theme.colors.secondary.border }, active && { backgroundColor: `${theme.colors.primary.DEFAULT}20`, borderColor: theme.colors.primary.DEFAULT }]}
+                      >
+                        <Text style={[styles.filterOptionText, { color: theme.colors.text.primary }]}>{opt}</Text>
+                        {active ? <Text style={{ color: theme.colors.primary.DEFAULT, fontWeight: '800' }}>✓</Text> : null}
+                      </Pressable>
+                    );
+                  })}
+
+                  <Pressable
+                    testID="transactions-filters-go-date"
+                    accessibilityLabel="Go to date filters"
+                    onPress={() => setFiltersScreen('date')}
+                    style={styles.filtersNavigateRow}
+                  >
+                    <Text style={[styles.filtersNavigateText, { color: theme.colors.text.secondary }]}>Date →</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.filtersSection}>
+                  <Text style={[styles.filtersSectionLabel, { color: theme.colors.text.secondary }]}>Date</Text>
+                  {(['All Time', 'Today', 'Yesterday', 'This Week', 'This Month'] as Array<
+                    | 'All Time'
+                    | 'Today'
+                    | 'Yesterday'
+                    | 'This Week'
+                    | 'This Month'
+                  >).map((opt) => {
+                    const active = draftDateFilter === opt;
+                    return (
+                      <Pressable
+                        key={opt}
+                        testID={`transactions-filter-date-${opt}`}
+                        accessibilityLabel={`Select date ${opt}`}
+                        onPress={() => setDraftDateFilter(opt)}
+                        style={[styles.filterOptionRow, { borderColor: theme.colors.secondary.border }, active && { backgroundColor: `${theme.colors.primary.DEFAULT}20`, borderColor: theme.colors.primary.DEFAULT }]}
+                      >
+                        <Text style={[styles.filterOptionText, { color: theme.colors.text.primary }]}>{opt}</Text>
+                        {active ? <Text style={{ color: theme.colors.primary.DEFAULT, fontWeight: '800' }}>✓</Text> : null}
+                      </Pressable>
+                    );
+                  })}
+
+                  <Pressable
+                    testID="transactions-filters-go-category"
+                    accessibilityLabel="Go to category filters"
+                    onPress={() => setFiltersScreen('category')}
+                    style={styles.filtersNavigateRow}
+                  >
+                    <Text style={[styles.filtersNavigateText, { color: theme.colors.text.secondary }]}>Category →</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+
+            {/* Fixed Apply */}
+            <View style={styles.filtersFooter}>
+              <ScaleButton
+                label="Apply"
+                testID="transactions-filters-apply"
+                accessibilityLabel="Apply filters"
+                onPress={() => {
+                  setCategoryFilter(draftCategoryFilter);
+                  setDateFilter(draftDateFilter);
+                  setIsFiltersModalOpen(false);
+                }}
+                style={styles.filtersApplyButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
 
       <SectionList
         sections={sections}
@@ -618,6 +750,103 @@ const styles = StyleSheet.create({
   screenContent: {
     gap: 16,
   },
+  // Filters UI
+  filtersOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(17,24,39,0.35)',
+    padding: 0,
+    justifyContent: 'center',
+  },
+  filtersSheet: {
+    marginHorizontal: 12,
+    marginBottom: 0,
+    borderRadius: 20,
+    flex: 1,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  filtersHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  filtersBackButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filtersHeaderText: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  filtersTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  filtersClearAllButton: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  filtersClearAllText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  filtersContent: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+  },
+  filtersSection: {
+    flex: 1,
+    gap: 12,
+  },
+  filtersSectionLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  filterOptionRow: {
+    height: 48,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  filterOptionText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  filtersNavigateRow: {
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+  },
+  filtersNavigateText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  filtersFooter: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.06)',
+  },
+  filtersApplyButton: {
+    width: '100%',
+  },
+
+  // Existing
+
   header: {
     marginBottom: 8,
   },
@@ -637,6 +866,39 @@ const styles = StyleSheet.create({
   },
   filtersWrap: {
     gap: 10,
+  },
+  searchAndFilterRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  searchInputBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    minHeight: 44,
+  },
+  filtersIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filtersIndicatorWrap: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+  },
+  filtersIndicatorText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   searchBar: {
     minHeight: 48,

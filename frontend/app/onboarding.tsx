@@ -1,14 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import { ScaleButton } from '../components/ScaleButton';
 import { ScreenWrapper } from '../components/ScreenWrapper';
@@ -54,10 +47,8 @@ export default function OnboardingScreen() {
 
   const styles = StyleSheet.create({
     container: {
+      flex: 1,
       justifyContent: 'center',
-    },
-    keyboardWrap: {
-      gap: theme.spacing.s6,
     },
     headerWrap: {
       gap: theme.spacing.s2,
@@ -102,24 +93,26 @@ export default function OnboardingScreen() {
 
   return (
     <ScreenWrapper scrollable={false} contentStyle={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardWrap}
+      <KeyboardAwareScrollView
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={100}
+        extraHeight={120}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: theme.spacing.s8 }}
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardDismissMode="interactive"
-        >
-          <View style={styles.headerWrap}>
-            <Text style={styles.logoText}>
-              Waltrack<Text style={styles.logoDot}>.</Text>
-            </Text>
-            <Text style={styles.subtitle}>Set up your profile to start tracking smarter.</Text>
-          </View>
+        <View style={styles.headerWrap}>
+          <Text style={styles.logoText}>
+            Waltrack<Text style={styles.logoDot}>.</Text>
+          </Text>
+          <Text style={styles.subtitle}>
+            Set up your profile to start tracking smarter.
+          </Text>
+        </View>
 
-          <WaltrackCard style={styles.formCard}>
-            <View style={styles.fieldWrap}>
+        <WaltrackCard style={styles.formCard}>
+          <View style={styles.fieldWrap}>
               <Text style={styles.label}>Name</Text>
               <TextInput
                 testID="onboarding-name-input"
@@ -192,8 +185,7 @@ export default function OnboardingScreen() {
               accessibilityLabel="Start using Waltrack"
             />
           </WaltrackCard>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </ScreenWrapper>
   );
 }
