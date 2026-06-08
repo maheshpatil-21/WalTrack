@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -101,88 +102,97 @@ export default function OnboardingScreen() {
 
   return (
     <ScreenWrapper scrollable={false} contentStyle={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardWrap}>
-        <View style={styles.headerWrap}>
-          <Text style={styles.logoText}>
-            Waltrack<Text style={styles.logoDot}>.</Text>
-          </Text>
-          <Text style={styles.subtitle}>Set up your profile to start tracking smarter.</Text>
-        </View>
-
-        <WaltrackCard style={styles.formCard}>
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput
-              testID="onboarding-name-input"
-              accessibilityLabel="Enter your name"
-              value={name}
-              onChangeText={(value) => {
-                setError('');
-                setName(value);
-              }}
-              style={styles.input}
-              placeholder="Your full name"
-            />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardWrap}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardDismissMode="interactive"
+        >
+          <View style={styles.headerWrap}>
+            <Text style={styles.logoText}>
+              Waltrack<Text style={styles.logoDot}>.</Text>
+            </Text>
+            <Text style={styles.subtitle}>Set up your profile to start tracking smarter.</Text>
           </View>
 
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Email ID</Text>
-            <TextInput
-              testID="onboarding-email-input"
-              accessibilityLabel="Enter your email"
-              value={email}
-              onChangeText={(value) => {
-                setError('');
-                setEmail(value);
-              }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              style={styles.input}
-              placeholder="you@example.com"
+          <WaltrackCard style={styles.formCard}>
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Name</Text>
+              <TextInput
+                testID="onboarding-name-input"
+                accessibilityLabel="Enter your name"
+                value={name}
+                onChangeText={(value) => {
+                  setError('');
+                  setName(value);
+                }}
+                style={styles.input}
+                placeholder="Your full name"
+              />
+            </View>
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Email ID</Text>
+              <TextInput
+                testID="onboarding-email-input"
+                accessibilityLabel="Enter your email"
+                value={email}
+                onChangeText={(value) => {
+                  setError('');
+                  setEmail(value);
+                }}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                style={styles.input}
+                placeholder="you@example.com"
+              />
+            </View>
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Mobile Number</Text>
+              <TextInput
+                testID="onboarding-phone-input"
+                accessibilityLabel="Enter your mobile number"
+                value={phone}
+                onChangeText={(value) => {
+                  setError('');
+                  setPhone(value.replace(/[^0-9]/g, ''));
+                }}
+                keyboardType="phone-pad"
+                style={styles.input}
+                placeholder="9876543210"
+              />
+            </View>
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Age</Text>
+              <TextInput
+                testID="onboarding-age-input"
+                accessibilityLabel="Enter your age"
+                value={age}
+                onChangeText={(value) => {
+                  setError('');
+                  setAge(value.replace(/[^0-9]/g, ''));
+                }}
+                keyboardType="numeric"
+                style={styles.input}
+                placeholder="21"
+              />
+            </View>
+
+            {!!error && <Text style={styles.errorText}>{error}</Text>}
+
+            <ScaleButton
+              label="Start Using Waltrack"
+              onPress={submitProfile}
+              testID="onboarding-submit"
+              accessibilityLabel="Start using Waltrack"
             />
-          </View>
-
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Mobile Number</Text>
-            <TextInput
-              testID="onboarding-phone-input"
-              accessibilityLabel="Enter your mobile number"
-              value={phone}
-              onChangeText={(value) => {
-                setError('');
-                setPhone(value.replace(/[^0-9]/g, ''));
-              }}
-              keyboardType="phone-pad"
-              style={styles.input}
-              placeholder="9876543210"
-            />
-          </View>
-
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Age</Text>
-            <TextInput
-              testID="onboarding-age-input"
-              accessibilityLabel="Enter your age"
-              value={age}
-              onChangeText={(value) => {
-                setError('');
-                setAge(value.replace(/[^0-9]/g, ''));
-              }}
-              keyboardType="numeric"
-              style={styles.input}
-              placeholder="21"
-            />
-          </View>
-
-          {!!error && <Text style={styles.errorText}>{error}</Text>}
-
-          <ScaleButton
-            label="Start Using Waltrack"
-            onPress={submitProfile}
-            testID="onboarding-submit"
-            accessibilityLabel="Start using Waltrack"
-          />
-        </WaltrackCard>
+          </WaltrackCard>
+        </ScrollView>
       </KeyboardAvoidingView>
     </ScreenWrapper>
   );

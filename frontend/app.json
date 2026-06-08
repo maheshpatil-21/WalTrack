@@ -23,7 +23,8 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "NOTIFICATIONS"]
+        "NOTIFICATIONS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -41,7 +42,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#FFFFFF"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

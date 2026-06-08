@@ -36,6 +36,8 @@ interface EditForm {
 }
 
 export default function TransactionsScreen() {
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+
   const router = useRouter();
   const { theme } = useTheme();
   const { expenses, deleteExpense, updateExpense, currency } = useExpenseStore();
@@ -183,74 +185,61 @@ export default function TransactionsScreen() {
       </View>
 
       <View style={styles.filtersWrap}>
-        <View style={[styles.searchBar, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.surface }]}>
-          <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.text.secondary} />
-          <TextInput
-            testID="transactions-search-input"
-            accessibilityLabel="Search transactions"
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholder="Search notes or categories"
-            placeholderTextColor={theme.colors.text.tertiary}
-            style={[styles.searchInput, { color: theme.colors.text.primary }]}
-          />
-          {searchText.trim().length > 0 ? (
-            <Pressable
-              testID="transactions-search-clear"
-              accessibilityLabel="Clear search"
-              onPress={() => setSearchText('')}
-              style={styles.searchClear}
-            >
-              <MaterialCommunityIcons name="close" size={16} color={theme.colors.text.tertiary} />
-            </Pressable>
-          ) : null}
+        <View style={styles.searchAndFilterRow}>
+          <View style={[styles.searchBar, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.surface }]}>
+            <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.text.secondary} />
+            <TextInput
+              testID="transactions-search-input"
+              accessibilityLabel="Search transactions"
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholder="Search notes or categories"
+              placeholderTextColor={theme.colors.text.tertiary}
+              style={[styles.searchInput, { color: theme.colors.text.primary }]}
+            />
+            {searchText.trim().length > 0 ? (
+              <Pressable
+                testID="transactions-search-clear"
+                accessibilityLabel="Clear search"
+                onPress={() => setSearchText('')}
+                style={styles.searchClear}
+              >
+                <MaterialCommunityIcons name="close" size={16} color={theme.colors.text.tertiary} />
+              </Pressable>
+            ) : null}
+          </View>
+
+          <Pressable
+            testID="transactions-filters-button"
+            accessibilityLabel="Open filters"
+            onPress={() => setIsFiltersModalOpen(true)}
+            style={[styles.filtersIconButton, { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.surface }]}
+          >
+            <MaterialCommunityIcons name="tune-variant" size={18} color={theme.colors.text.secondary} />
+          </Pressable>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-          {(['All', ...CATEGORY_OPTIONS] as const).map((cat) => {
-            const active = categoryFilter === cat;
-            return (
-              <Pressable
-                key={cat}
-                testID={`transactions-cat-${cat}`}
-                accessibilityLabel={`Filter category ${cat}`}
-                onPress={() => setCategoryFilter(cat as Category | 'All')}
-                style={[
-                  styles.chip,
-                  { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.background },
-                  active && { backgroundColor: theme.colors.primary.bg, borderColor: theme.colors.primary.DEFAULT },
-                ]}
-              >
-                <Text style={[styles.chipText, { color: active ? theme.colors.primary.dark : theme.colors.text.secondary }]}>
-                  {cat}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-          {(['All Time', 'Today', 'Yesterday', 'This Week', 'This Month'] as const).map((d) => {
-            const active = dateFilter === d;
-            return (
-              <Pressable
-                key={d}
-                testID={`transactions-date-${d}`}
-                accessibilityLabel={`Filter date ${d}`}
-                onPress={() => setDateFilter(d)}
-                style={[
-                  styles.chip,
-                  { borderColor: theme.colors.secondary.border, backgroundColor: theme.colors.background },
-                  active && { backgroundColor: theme.colors.primary.bg, borderColor: theme.colors.primary.DEFAULT },
-                ]}
-              >
-                <Text style={[styles.chipText, { color: active ? theme.colors.primary.dark : theme.colors.text.secondary }]}>
-                  {d}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        {(categoryFilter !== 'All' || dateFilter !== 'All Time') ? (
+          <Pressable
+            testID="transactions-filters-indicator"
+            accessibilityLabel="Active filters"
+            onPress={() => {
+              if (categoryFilter !== 'All' || dateFilter !== 'All Time') {
+                setCategoryFilter('All');
+                setDateFilter('All Time');
+              }
+            }}
+            style={[styles.filtersIndicatorWrap, { borderColor: theme.colors.secondary.border }]}
+          >
+            <Text style={[styles.filtersIndicatorText, { color: theme.colors.text.primary }]}>
+              {(() => {
+                const count = (categoryFilter !== 'All' ? 1 : 0) + (dateFilter !== 'All Time' ? 1 : 0);
+                if (count === 1) return '1 Filter Applied';
+                return `${count} Filters Applied ✕`;
+              })()}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <SectionList

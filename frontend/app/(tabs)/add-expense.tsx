@@ -51,8 +51,9 @@ export default function AddExpenseScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={[styles.keyboardContainer, { gap: theme.spacing.s6 }]}
+          contentContainerStyle={{ flexGrow: 1, gap: theme.spacing.s6 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           <View>
             <Text style={[styles.title, { color: theme.colors.text.primary }]}>Quick expense entry</Text>
@@ -139,7 +140,6 @@ export default function AddExpenseScreen() {
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    justifyContent: 'space-between',
   },
   title: {
     fontSize: 24,
