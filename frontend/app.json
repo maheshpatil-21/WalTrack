@@ -2,11 +2,11 @@
   "expo": {
     "name": "WalTrack",
     "slug": "waltrack",
-    "version": "1.0.0",
+    "version": "1.4.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "waltrack",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -16,15 +16,16 @@
     },
     "android": {
       "package": "com.waltrack.app",
-      "versionCode": 1,
+      "versionCode": 14,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#FFFFFF"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "NOTIFICATIONS"
-      ]
+  "NOTIFICATIONS",
+  "INTERNET"
+]
     },
     "web": {
       "bundler": "metro",
