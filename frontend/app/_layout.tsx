@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
+import { AuthProvider } from '../contexts/AuthContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { ExpenseProvider } from '../hooks/useExpenseStore';
 import { trackFirstInstall } from '../utils/installTracking';
@@ -20,10 +21,7 @@ function RootNavigator() {
   const router = useRouter();
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      return;
-    }
-
+    if (Platform.OS === 'web') return;
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const nextRoute = response.notification.request.content.data?.route;
       if (typeof nextRoute === 'string') {
@@ -32,10 +30,7 @@ function RootNavigator() {
         router.push('/add-expense');
       }
     });
-
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, [router]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
@@ -48,9 +43,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <ExpenseProvider>
-        <RootNavigator />
-      </ExpenseProvider>
+      <AuthProvider>
+        <ExpenseProvider>
+          <RootNavigator />
+        </ExpenseProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -1,81 +1,91 @@
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ScaleButton } from '../components/ScaleButton';
-import { ScreenWrapper } from '../components/ScreenWrapper';
 import { WaltrackCard } from '../components/WaltrackCard';
+import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useExpenseStore } from '../hooks/useExpenseStore';
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { user } = useAuth();
   const { setUserProfile } = useExpenseStore();
+  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [age, setAge] = useState('');
+  const [college, setCollege] = useState('');
   const [error, setError] = useState('');
 
   const isFormFilled = useMemo(
-    () => name.trim() && email.trim() && phone.trim() && age.trim(),
-    [name, email, phone, age]
+    () => name.trim() && phone.trim() && age.trim() && college.trim(),
+    [name, phone, age, college]
   );
 
   const submitProfile = async () => {
-    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    const validPhone = /^[0-9]+$/.test(phone.trim());
+    const validPhone = /^[0-9]{10}$/.test(phone.trim());
     const parsedAge = Number(age);
-    const validAge = Number.isFinite(parsedAge) && parsedAge > 0;
+    const validAge = Number.isFinite(parsedAge) && parsedAge > 0 && parsedAge < 120;
 
-    if (!isFormFilled || !validEmail || !validPhone || !validAge) {
-      setError('Please complete all fields with valid details.');
+    if (!isFormFilled) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    if (!validPhone) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!validAge) {
+      setError('Please enter a valid age.');
       return;
     }
 
     await setUserProfile({
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: user?.email ?? '',
       phone: phone.trim(),
       age: parsedAge,
+      college: college.trim(),
     });
+
     router.replace('/dashboard');
   };
 
-  const styles = StyleSheet.create({
-    container: {
+  const s = StyleSheet.create({
+    outer: {
       flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingTop: insets.top,
+      paddingBottom: insets.bottom,
+    },
+    scroll: {
+      flexGrow: 1,
       justifyContent: 'center',
+      paddingHorizontal: 24,
+      paddingVertical: 32,
     },
-    headerWrap: {
-      gap: theme.spacing.s2,
-    },
-    logoText: {
-      ...theme.typography.h1,
-      color: theme.colors.text.primary,
-    },
-    logoDot: {
-      color: theme.colors.primary.DEFAULT,
-    },
-    subtitle: {
-      ...theme.typography.body,
-      color: theme.colors.text.secondary,
-    },
-    formCard: {
-      gap: theme.spacing.s4,
-      borderRadius: theme.radius.xl,
-    },
-    fieldWrap: {
-      gap: theme.spacing.s2,
-    },
-    label: {
-      ...theme.typography.bodySm,
-      color: theme.colors.text.secondary,
-      fontWeight: '600',
-    },
+    headerWrap: { gap: 6, marginBottom: 24 },
+    logoText: { ...theme.typography.h1, color: theme.colors.text.primary },
+    logoDot: { color: theme.colors.primary.DEFAULT },
+    subtitle: { ...theme.typography.body, color: theme.colors.text.secondary },
+    emailNote: { ...theme.typography.bodySm, color: theme.colors.text.secondary, marginTop: 4 },
+    emailValue: { fontWeight: '700', color: theme.colors.text.primary },
+    formCard: { gap: theme.spacing.s4 },
+    fieldWrap: { gap: theme.spacing.s2 },
+    label: { ...theme.typography.bodySm, color: theme.colors.text.secondary, fontWeight: '600' },
     input: {
       minHeight: 48,
       borderWidth: 1,
@@ -85,98 +95,83 @@ export default function OnboardingScreen() {
       color: theme.colors.text.primary,
       ...theme.typography.body,
     },
-    errorText: {
-      ...theme.typography.bodySm,
-      color: theme.colors.danger,
-    },
+    errorText: { ...theme.typography.bodySm, color: theme.colors.danger },
   });
 
   return (
-    <ScreenWrapper scrollable={false} contentStyle={styles.container}>
-      <KeyboardAwareScrollView
-        enableOnAndroid={true}
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={100}
-        extraHeight={120}
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: theme.spacing.s8 }}
-        showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
-      >
-        <View style={styles.headerWrap}>
-          <Text style={styles.logoText}>
-            Waltrack<Text style={styles.logoDot}>.</Text>
-          </Text>
-          <Text style={styles.subtitle}>
-            Set up your profile to start tracking smarter.
-          </Text>
-        </View>
+    <View style={s.outer}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View style={s.headerWrap}>
+            <Text style={s.logoText}>
+              Waltrack<Text style={s.logoDot}>.</Text>
+            </Text>
+            <Text style={s.subtitle}>Complete your profile to start tracking smarter.</Text>
+            {!!user?.email && (
+              <Text style={s.emailNote}>
+                Signed in as <Text style={s.emailValue}>{user.email}</Text>
+              </Text>
+            )}
+          </View>
 
-        <WaltrackCard style={styles.formCard}>
-          <View style={styles.fieldWrap}>
-              <Text style={styles.label}>Name</Text>
+          <WaltrackCard style={s.formCard}>
+            <View style={s.fieldWrap}>
+              <Text style={s.label}>Full Name</Text>
               <TextInput
                 testID="onboarding-name-input"
-                accessibilityLabel="Enter your name"
+                accessibilityLabel="Enter your full name"
                 value={name}
-                onChangeText={(value) => {
-                  setError('');
-                  setName(value);
-                }}
-                style={styles.input}
+                onChangeText={(v) => { setError(''); setName(v); }}
+                style={s.input}
                 placeholder="Your full name"
+                placeholderTextColor={theme.colors.text.secondary}
               />
             </View>
 
-            <View style={styles.fieldWrap}>
-              <Text style={styles.label}>Email ID</Text>
-              <TextInput
-                testID="onboarding-email-input"
-                accessibilityLabel="Enter your email"
-                value={email}
-                onChangeText={(value) => {
-                  setError('');
-                  setEmail(value);
-                }}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                style={styles.input}
-                placeholder="you@example.com"
-              />
-            </View>
-
-            <View style={styles.fieldWrap}>
-              <Text style={styles.label}>Mobile Number</Text>
+            <View style={s.fieldWrap}>
+              <Text style={s.label}>Mobile Number</Text>
               <TextInput
                 testID="onboarding-phone-input"
                 accessibilityLabel="Enter your mobile number"
                 value={phone}
-                onChangeText={(value) => {
-                  setError('');
-                  setPhone(value.replace(/[^0-9]/g, ''));
-                }}
+                onChangeText={(v) => { setError(''); setPhone(v.replace(/[^0-9]/g, '')); }}
                 keyboardType="phone-pad"
-                style={styles.input}
-                placeholder="9876543210"
+                style={s.input}
+                placeholder="10-digit mobile number"
+                placeholderTextColor={theme.colors.text.secondary}
+                maxLength={10}
               />
             </View>
 
-            <View style={styles.fieldWrap}>
-              <Text style={styles.label}>Age</Text>
+            <View style={s.fieldWrap}>
+              <Text style={s.label}>Age</Text>
               <TextInput
                 testID="onboarding-age-input"
                 accessibilityLabel="Enter your age"
                 value={age}
-                onChangeText={(value) => {
-                  setError('');
-                  setAge(value.replace(/[^0-9]/g, ''));
-                }}
+                onChangeText={(v) => { setError(''); setAge(v.replace(/[^0-9]/g, '')); }}
                 keyboardType="numeric"
-                style={styles.input}
-                placeholder="21"
+                style={s.input}
+                placeholder="Your age"
+                placeholderTextColor={theme.colors.text.secondary}
+                maxLength={3}
               />
             </View>
 
-            {!!error && <Text style={styles.errorText}>{error}</Text>}
+            <View style={s.fieldWrap}>
+              <Text style={s.label}>College / City</Text>
+              <TextInput
+                testID="onboarding-college-input"
+                accessibilityLabel="Enter your college or city"
+                value={college}
+                onChangeText={(v) => { setError(''); setCollege(v); }}
+                style={s.input}
+                placeholder="e.g. IIT Delhi or Mumbai"
+                placeholderTextColor={theme.colors.text.secondary}
+              />
+            </View>
+
+            {!!error && <Text style={s.errorText}>{error}</Text>}
 
             <ScaleButton
               label="Start Using Waltrack"
@@ -185,7 +180,8 @@ export default function OnboardingScreen() {
               accessibilityLabel="Start using Waltrack"
             />
           </WaltrackCard>
-      </KeyboardAwareScrollView>
-    </ScreenWrapper>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }

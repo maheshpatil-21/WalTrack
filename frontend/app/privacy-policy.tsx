@@ -75,14 +75,21 @@ export default function PrivacyPolicyScreen() {
         <View style={styles.sectionWrap}>
           <Text style={styles.sectionTitle}>Introduction</Text>
           <Text style={styles.sectionText}>
-            WalTrack is a personal expense tracker designed to keep your financial details private and local. This policy explains how we collect, use, and store your information.
+            WalTrack is a personal expense tracker. This policy explains what data we collect, how we use it, and how it is stored and protected.
+          </Text>
+        </View>
+
+        <View style={styles.sectionWrap}>
+          <Text style={styles.sectionTitle}>Data We Collect</Text>
+          <Text style={styles.sectionText}>
+            When you create an account we collect: your name, email address, mobile number, age, and college or city. Your expense entries (amount, category, date, notes) are stored to provide the core tracking features. We also collect anonymous install and usage data (device type, app version, country) for analytics.
           </Text>
         </View>
 
         <View style={styles.sectionWrap}>
           <Text style={styles.sectionTitle}>Data Storage</Text>
           <Text style={styles.sectionText}>
-            Expense data is stored locally on your device. WalTrack does not sell personal data to third parties, and your information remains under your control.
+            Your account and expense data is securely stored on Google Firebase (Firestore), a cloud database provided by Google LLC. Firebase Auth is used to manage your account. Data is encrypted in transit (TLS) and at rest. WalTrack does not sell personal data to third parties.
           </Text>
         </View>
 
@@ -96,7 +103,7 @@ export default function PrivacyPolicyScreen() {
         <View style={styles.sectionWrap}>
           <Text style={styles.sectionTitle}>User Control</Text>
           <Text style={styles.sectionText}>
-            You may delete app data at any time. All stored expense information is managed on your device, and you can remove it through app settings or device storage controls.
+            You may delete your account and all associated data at any time from Settings → Account → Delete Account. This permanently removes your profile, expenses, and all stored information from our servers. You may also request deletion by emailing waltrack.official@gmail.com.
           </Text>
         </View>
 

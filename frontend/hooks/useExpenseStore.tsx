@@ -1,15 +1,23 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+} from 'firebase/firestore';
 
+import { useAuth } from '../contexts/AuthContext';
 import { Currency, Expense, NewExpense } from '../types/expense';
-
-const STORAGE_KEY = 'waltrack_store_v1';
+import { firestore } from '../utils/firebase';
 
 export interface UserProfile {
   name: string;
   email: string;
   phone: string;
   age: number;
+  college?: string;
 }
 
 export interface ReminderSettings {
@@ -64,54 +72,51 @@ const initialState: ExpenseStoreState = {
 
 const ExpenseStoreContext = createContext<ExpenseStoreContextValue | undefined>(undefined);
 
-async function writeState(nextState: ExpenseStoreState) {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 export function ExpenseProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [state, setState] = useState<ExpenseStoreState>(initialState);
   const [isReady, setIsReady] = useState(false);
-  const updateQueueRef = useRef(Promise.resolve());
 
-  const runStateUpdate = async (updater: (prev: ExpenseStoreState) => ExpenseStoreState) => {
-    updateQueueRef.current = updateQueueRef.current.then(async () => {
-      let computedState: ExpenseStoreState | null = null;
-      setState((prev) => {
-        computedState = updater(prev);
-        return computedState;
-      });
-
-      if (computedState) {
-        await writeState(computedState);
-      }
-    });
-
-    await updateQueueRef.current;
-  };
-
+  // ── Load from Firestore whenever the logged-in user changes ─────────────
   useEffect(() => {
-    const loadStore = async () => {
+    if (!user) {
+      setState(initialState);
+      setIsReady(false);
+      return;
+    }
+
+    const load = async () => {
+      setIsReady(false);
       try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as Partial<ExpenseStoreState>;
-          setState({
-            expenses: parsed.expenses ?? [],
-            monthlyBudget: parsed.monthlyBudget ?? 10000,
-            dailyLimit:
-              parsed.dailyLimit ?? defaultDailyLimit(parsed.monthlyBudget ?? initialState.monthlyBudget),
-            currency: 'INR',
-            userProfile: parsed.userProfile ?? null,
-            reminderSettings: {
-              enabled: parsed.reminderSettings?.enabled ?? defaultReminderSettings.enabled,
-              hour: parsed.reminderSettings?.hour ?? defaultReminderSettings.hour,
-              minute: parsed.reminderSettings?.minute ?? defaultReminderSettings.minute,
-              period: parsed.reminderSettings?.period ?? defaultReminderSettings.period,
-              notificationId:
-                parsed.reminderSettings?.notificationId ?? defaultReminderSettings.notificationId,
-            },
-          });
-        }
+        const uid = user.uid;
+
+        // Load user document (profile + settings)
+        const userSnap = await getDoc(doc(firestore, 'users', uid));
+        const userData = userSnap.exists() ? userSnap.data() : null;
+
+        // Load expenses sub-collection
+        const expSnap = await getDocs(collection(firestore, 'users', uid, 'expenses'));
+        const expenses: Expense[] = expSnap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Expense, 'id'>),
+        }));
+        expenses.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        const budget = userData?.monthlyBudget ?? 10000;
+        setState({
+          expenses,
+          monthlyBudget: budget,
+          dailyLimit: userData?.dailyLimit ?? defaultDailyLimit(budget),
+          currency: userData?.currency ?? 'INR',
+          userProfile: userData?.profile ?? null,
+          reminderSettings: userData?.reminderSettings ?? defaultReminderSettings,
+        });
       } catch {
         setState(initialState);
       } finally {
@@ -119,64 +124,108 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    loadStore();
-  }, []);
+    load();
+  }, [user?.uid]);
 
-  const addExpense = async (newExpense: NewExpense) => {
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  const userRef = user ? doc(firestore, 'users', user.uid) : null;
+
+  const mergeUser = async (fields: Record<string, unknown>) => {
+    if (!userRef) return;
+    await setDoc(userRef, fields, { merge: true });
+  };
+
+  // ── Expense operations ───────────────────────────────────────────────────
+  const addExpense = async (newExpense: NewExpense): Promise<void> => {
+    if (!user) return;
     const expense: Expense = {
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      id: generateId(),
       amount: newExpense.amount,
       category: newExpense.category,
       note: newExpense.note,
       date: new Date().toISOString(),
     };
-
-    await runStateUpdate((prev) => ({ ...prev, expenses: [expense, ...prev.expenses] }));
+    // Optimistic update
+    setState((prev) => ({ ...prev, expenses: [expense, ...prev.expenses] }));
+    try {
+      await setDoc(doc(firestore, 'users', user.uid, 'expenses', expense.id), {
+        amount: expense.amount,
+        category: expense.category,
+        note: expense.note,
+        date: expense.date,
+      });
+    } catch {
+      // Rollback on failure
+      setState((prev) => ({
+        ...prev,
+        expenses: prev.expenses.filter((e) => e.id !== expense.id),
+      }));
+    }
   };
 
-  const updateExpense = async (id: string, nextExpense: NewExpense) => {
-    await runStateUpdate((prev) => ({
-      ...prev,
-      expenses: prev.expenses.map((expense) => {
-        if (expense.id !== id) {
-          return expense;
-        }
-        return {
-          ...expense,
-          amount: nextExpense.amount,
-          category: nextExpense.category,
-          note: nextExpense.note,
-          date: nextExpense.date ?? expense.date,
-        };
-      }),
-    }));
+const updateExpense = async (
+  id: string,
+  nextExpense: NewExpense
+): Promise<void> => {
+  if (!user) return;
+
+  setState((prev) => ({
+    ...prev,
+    expenses: prev.expenses.map((e) =>
+      e.id !== id
+        ? e
+        : {
+            ...e,
+            amount: nextExpense.amount,
+            category: nextExpense.category,
+            note: nextExpense.note,
+            date: nextExpense.date ?? e.date,
+          }
+    ),
+  }));
+
+  await setDoc(
+    doc(firestore, 'users', user.uid, 'expenses', id),
+    {
+      amount: nextExpense.amount,
+      category: nextExpense.category,
+      note: nextExpense.note,
+      date: nextExpense.date,
+    },
+    { merge: true }
+  );
+};
+
+  const deleteExpense = async (id: string): Promise<void> => {
+    if (!user) return;
+    setState((prev) => ({ ...prev, expenses: prev.expenses.filter((e) => e.id !== id) }));
+    await deleteDoc(doc(firestore, 'users', user.uid, 'expenses', id));
   };
 
-  const deleteExpense = async (id: string) => {
-    await runStateUpdate((prev) => ({
-      ...prev,
-      expenses: prev.expenses.filter((expense) => expense.id !== id),
-    }));
+  // ── Settings operations ──────────────────────────────────────────────────
+  const setMonthlyBudget = async (budget: number): Promise<void> => {
+    setState((prev) => ({ ...prev, monthlyBudget: budget }));
+    await mergeUser({ monthlyBudget: budget });
   };
 
-  const setMonthlyBudget = async (budget: number) => {
-    await runStateUpdate((prev) => ({ ...prev, monthlyBudget: budget }));
+  const setDailyLimit = async (limit: number): Promise<void> => {
+    setState((prev) => ({ ...prev, dailyLimit: limit }));
+    await mergeUser({ dailyLimit: limit });
   };
 
-  const setDailyLimitValue = async (limit: number) => {
-    await runStateUpdate((prev) => ({ ...prev, dailyLimit: limit }));
+  const setCurrency = async (currency: Currency): Promise<void> => {
+    setState((prev) => ({ ...prev, currency }));
+    await mergeUser({ currency });
   };
 
-  const setCurrencyValue = async (currency: Currency) => {
-    await runStateUpdate((prev) => ({ ...prev, currency }));
+  const setUserProfile = async (profile: UserProfile): Promise<void> => {
+    setState((prev) => ({ ...prev, userProfile: profile }));
+    await mergeUser({ profile });
   };
 
-  const setUserProfileValue = async (profile: UserProfile) => {
-    await runStateUpdate((prev) => ({ ...prev, userProfile: profile }));
-  };
-
-  const setReminderSettingsValue = async (settings: ReminderSettings) => {
-    await runStateUpdate((prev) => ({ ...prev, reminderSettings: settings }));
+  const setReminderSettings = async (settings: ReminderSettings): Promise<void> => {
+    setState((prev) => ({ ...prev, reminderSettings: settings }));
+    await mergeUser({ reminderSettings: settings });
   };
 
   const value = useMemo(
@@ -187,11 +236,12 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
       updateExpense,
       deleteExpense,
       setMonthlyBudget,
-      setDailyLimit: setDailyLimitValue,
-      setCurrency: setCurrencyValue,
-      setUserProfile: setUserProfileValue,
-      setReminderSettings: setReminderSettingsValue,
+      setDailyLimit,
+      setCurrency,
+      setUserProfile,
+      setReminderSettings,
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [state, isReady]
   );
 
