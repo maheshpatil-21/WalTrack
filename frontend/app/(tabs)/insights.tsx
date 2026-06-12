@@ -172,39 +172,284 @@ export default function InsightsScreen() {
         )
         .join('');
 
+      // Budget health/status removed from PDF per redesign requirements.
+      const categoryTableRows = categoryBreakdown
+        .map(
+          (row) =>
+            `<tr>
+              <td style="padding: 10px 12px; color:#374151; font-weight:600;">${escapeHtml(row.label)}</td>
+              <td style="padding: 10px 12px; text-align:right; color:#111827; font-weight:700;">${formatCurrency(row.value, currency)}</td>
+            </tr>`
+        )
+        .join('');
+
+      const transactionsTableRows = [...expenses]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map((expense, idx) => {
+          const even = idx % 2 === 0;
+          const bg = even ? '#FFFFFF' : '#F9FAFB';
+          return `<tr style="background:${bg}">
+            <td style="padding: 10px 12px; color:#6B7280; font-weight:600;">${new Date(expense.date).toLocaleDateString('en-US')}</td>
+            <td style="padding: 10px 12px; color:#111827; font-weight:700;">
+              <span style="display:inline-block; padding:4px 10px; border-radius:999px; background:#ECFDF5; color:#065F46; font-size:12px; font-weight:800; border:1px solid #B7F7DD;">${escapeHtml(expense.category)}</span>
+            </td>
+            <td style="padding: 10px 12px; text-align:right; color:#111827; font-weight:800;">${formatCurrency(expense.amount, currency)}</td>
+            <td style="padding: 10px 12px; color:#374151; font-weight:600;">${escapeHtml(expense.note || '-')}</td>
+          </tr>`;
+        })
+        .join('');
+
+      const donut = (() => {
+        const size = 180;
+        const stroke = 20;
+        const r = (size - stroke) / 2;
+        const c = 2 * Math.PI * r;
+        const total = monthlySpending;
+        const safeTotal = total > 0 ? total : 1;
+
+        let acc = 0;
+        const segments = categoryBreakdown.length ? categoryBreakdown : [];
+
+        const rings = segments
+          .filter((s) => s.value > 0)
+          .map((s, i) => {
+            const frac = s.value / safeTotal;
+            const dash = frac * c;
+            const gap = c - dash;
+            const offset = c * (1 - acc);
+            acc += frac;
+            return `<circle
+              cx="${size / 2}" cy="${size / 2}" r="${r}"
+              fill="none" stroke="${s.color}"
+              stroke-width="${stroke}"
+              stroke-dasharray="${dash} ${gap}"
+              stroke-dashoffset="-${offset}"
+              stroke-linecap="butt"
+              transform="rotate(-90 ${size / 2} ${size / 2})" />`;
+          })
+          .join('');
+
+        return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#E5E7EB" stroke-width="${stroke}" opacity="0.35" />
+          ${rings}
+          <text x="${size / 2}" y="${size / 2}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="800" fill="#111827">${escapeHtml(
+            formatCurrency(monthlySpending, currency)
+          )}</text>
+        </svg>`;
+      })();
+
+      const weeklyBarsSvg = (() => {
+        const widthSvg = 520;
+        const heightSvg = 190;
+        const pad = 18;
+        const chartW = widthSvg - pad * 2;
+        const chartH = heightSvg - pad * 2;
+        const bars = weeklySeries && weeklySeries.length ? weeklySeries : [
+          { value: 0, label: 'W1' },
+          { value: 0, label: 'W2' },
+          { value: 0, label: 'W3' },
+          { value: 0, label: 'W4' },
+          { value: 0, label: 'W5' },
+        ];
+        const max = Math.max(...bars.map((b) => b.value), 0);
+        const count = bars.length;
+        const gap = 10;
+        const barW = Math.max(10, Math.floor((chartW - gap * (count - 1)) / count));
+        const totalNeeded = barW * count + gap * (count - 1);
+        const startX = pad + Math.max(0, Math.floor((chartW - totalNeeded) / 2));
+        const color = '#10B981';
+
+        const rects = bars
+          .map((b, i) => {
+            const frac = max > 0 ? b.value / max : 0;
+            const h = Math.round(frac * chartH);
+            const x = startX + i * (barW + gap);
+            const y = pad + (chartH - h);
+            return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="8" ry="8" fill="${color}" opacity="0.95" />`;
+          })
+          .join('');
+
+        const axisY = pad + chartH;
+
+        return `<div style="display:flex; flex-direction:column; align-items:stretch; gap:6px;">
+          <svg width="${widthSvg}" height="${heightSvg}" viewBox="0 0 ${widthSvg} ${heightSvg}" xmlns="http://www.w3.org/2000/svg">
+            <line x1="${pad}" y1="${axisY}" x2="${pad + chartW}" y2="${axisY}" stroke="#E5E7EB" stroke-width="1" />
+            ${rects}
+          </svg>
+          <div style="display:grid; grid-template-columns: repeat(${count}, 1fr); gap: 10px;">
+            ${bars
+              .map(
+                (b) =>
+                  `<div style="text-align:center; font-size:12px; font-weight:800; color:#6B7280;">${escapeHtml(
+                    b.label
+                  )}</div>`
+              )
+              .join('')}
+          </div>
+        </div>`;
+      })();
+
+      const categoryCard = categoryBreakdown.length
+        ? `<table style="width:100%; border-collapse:collapse; margin-top:12px;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:10px 12px; font-size:12px; letter-spacing:0.2px; color:#6B7280;">Category</th>
+                <th style="text-align:right; padding:10px 12px; font-size:12px; letter-spacing:0.2px; color:#6B7280;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${categoryTableRows}
+            </tbody>
+          </table>`
+        : `<div style="margin-top:12px; color:#6B7280; font-weight:700; font-size:13px;">No category data</div>`;
+
+      const budgetUsagePct = monthlyBudget > 0 ? Math.round((monthlySpending / monthlyBudget) * 100) : 0;
+      const budgetUsagePctClamped = Math.max(0, Math.min(100, budgetUsagePct));
+
       const html = `
         <html>
-          <body style="font-family: Arial; padding: 24px; color: #111827;">
-            <h1 style="color:#10B981; margin-bottom: 6px;">Waltrack Expense Report</h1>
-            <p style="margin-top:0; color:#6B7280;">Generated on ${new Date().toLocaleString()}</p>
+          <body style="font-family: Arial, Helvetica, sans-serif; margin:0; padding: 28px; color:#111827; background:#FFFFFF;">
+            <div style="max-width: 980px; margin: 0 auto;">
+              <!-- HERO -->
+              <div style="border:1px solid #E5E7EB; border-radius: 18px; padding: 22px 22px; background: linear-gradient(180deg, #ECFDF5 0%, #FFFFFF 65%);">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:44px; height:44px; border-radius:14px; background:#10B981; display:flex; align-items:center; justify-content:center; font-weight:900; color:#FFFFFF;">W</div>
+                    <div>
+                      <div style="font-size:14px; font-weight:800; color:#065F46; letter-spacing:0.4px;">WALTRACK</div>
+                      <div style="font-size:22px; font-weight:900; line-height: 28px;">Expense Report</div>
+                      <div style="font-size:12px; font-weight:800; color:#6B7280; margin-top:2px;">Your spending summary and insights</div>
+                    </div>
+                  </div>
+                  <div style="text-align:right; min-width: 260px;">
+                    <div style="font-size:12px; font-weight:800; color:#6B7280;">Generated</div>
+                    <div style="font-size:13px; font-weight:800; color:#111827; margin-top:2px;">${escapeHtml(new Date().toLocaleString())}</div>
+                  </div>
+                </div>
+              </div>
 
-            <h2>Profile</h2>
-            <p><strong>Name:</strong> ${escapeHtml(userProfile?.name ?? '-')}</p>
-            <p><strong>Email:</strong> ${escapeHtml(userProfile?.email ?? '-')}</p>
-            <p><strong>Mobile:</strong> ${escapeHtml(userProfile?.phone ?? '-')}</p>
-            <p><strong>Age:</strong> ${escapeHtml(String(userProfile?.age ?? '-'))}</p>
+              <!-- GRID: PROFILE + INSIGHTS CARDS -->
+              <div style="display:grid; grid-template-columns: 1fr; gap: 14px; margin-top: 16px;">
+                <!-- PROFILE CARD -->
+                <div style="border:1px solid #E5E7EB; border-radius: 16px; padding: 16px; background:#FFFFFF;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                    <div>
+                      <div style="font-size:14px; font-weight:900; color:#111827;">Profile</div>
+                      <div style="font-size:12px; font-weight:800; color:#6B7280; margin-top:2px;">Account details used for this report</div>
+                    </div>
+                    <div style="font-size:12px; font-weight:900; color:#10B981;">${escapeHtml(selectedMonth?.label ?? 'N/A')}</div>
+                  </div>
 
-            <h2>Monthly Insights (${escapeHtml(selectedMonth?.label ?? 'N/A')})</h2>
-            <ul>${insightRows}</ul>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top: 14px;">
+                    <div style="border:1px solid #E5E7EB; border-radius: 14px; padding: 12px; background:#F9FAFB;">
+                      <div style="font-size:11px; font-weight:900; color:#6B7280;">NAME</div>
+                      <div style="font-size:14px; font-weight:900; color:#111827; margin-top:6px;">${escapeHtml(userProfile?.name ?? '-')}</div>
+                    </div>
+                    <div style="border:1px solid #E5E7EB; border-radius: 14px; padding: 12px; background:#F9FAFB;">
+                      <div style="font-size:11px; font-weight:900; color:#6B7280;">EMAIL</div>
+                      <div style="font-size:14px; font-weight:900; color:#111827; margin-top:6px;">${escapeHtml(userProfile?.email ?? '-')}</div>
+                    </div>
+                    <div style="border:1px solid #E5E7EB; border-radius: 14px; padding: 12px; background:#F9FAFB;">
+                      <div style="font-size:11px; font-weight:900; color:#6B7280;">MOBILE</div>
+                      <div style="font-size:14px; font-weight:900; color:#111827; margin-top:6px;">${escapeHtml(userProfile?.phone ?? '-')}</div>
+                    </div>
+                    <div style="border:1px solid #E5E7EB; border-radius: 14px; padding: 12px; background:#F9FAFB;">
+                      <div style="font-size:11px; font-weight:900; color:#6B7280;">AGE</div>
+                      <div style="font-size:14px; font-weight:900; color:#111827; margin-top:6px;">${escapeHtml(String(userProfile?.age ?? '-'))}</div>
+                    </div>
+                  </div>
+                </div>
 
-            <h2>Category Distribution</h2>
-            <table border="1" cellspacing="0" cellpadding="8" style="width:100%; border-collapse: collapse;">
-              <thead><tr><th align="left">Category</th><th align="right">Amount</th></tr></thead>
-              <tbody>${categoryRows || '<tr><td colspan="2">No category data</td></tr>'}</tbody>
-            </table>
+                <!-- INSIGHT CARDS ROW -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; page-break-inside: avoid;">
+                  <div style="border:1px solid #E5E7EB; border-radius: 16px; padding: 16px; background:#FFFFFF; page-break-inside: avoid;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                      <div>
+                        <div style="font-size:12px; font-weight:900; color:#6B7280;">Total Spending</div>
+                        <div style="font-size:26px; font-weight:1000; color:#10B981; margin-top: 8px;">${formatCurrency(monthlySpending, currency)}</div>
+                      </div>
+                      <div style="width:36px; height:36px; border-radius: 14px; background:#ECFDF5; display:flex; align-items:center; justify-content:center; font-weight:900; color:#065F46;">₹</div>
+                    </div>
+                  </div>
 
-            <h2>All Transactions</h2>
-            <table border="1" cellspacing="0" cellpadding="8" style="width:100%; border-collapse: collapse;">
-              <thead>
-                <tr>
-                  <th align="left">Date</th>
-                  <th align="left">Category</th>
-                  <th align="right">Amount</th>
-                  <th align="left">Note</th>
-                </tr>
-              </thead>
-              <tbody>${transactionRows || '<tr><td colspan="4">No transactions available</td></tr>'}</tbody>
-            </table>
+                  <div style="border:1px solid #E5E7EB; border-radius: 16px; padding: 16px; background:#FFFFFF; page-break-inside: avoid;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                      <div>
+                        <div style="font-size:12px; font-weight:900; color:#6B7280;">Remaining Budget</div>
+                        <div style="font-size:26px; font-weight:1000; color:#111827; margin-top: 8px;">${formatCurrency(remainingBudget, currency)}</div>
+                      </div>
+                      <div style="width:36px; height:36px; border-radius: 14px; background:#F3F4F6; display:flex; align-items:center; justify-content:center; font-weight:900; color:#374151;">◎</div>
+                    </div>
+                  </div>
+
+                  <div style="border:1px solid #E5E7EB; border-radius: 16px; padding: 16px; background:#FFFFFF; page-break-inside: avoid;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                      <div>
+                        <div style="font-size:12px; font-weight:900; color:#6B7280;">Highest Spending Category</div>
+                        <div style="font-size:18px; font-weight:1000; color:#111827; margin-top: 8px;">${escapeHtml(highestCategory.label)}</div>
+                        <div style="font-size:14px; font-weight:900; color:#10B981; margin-top: 2px;">${formatCurrency(highestCategory.value, currency)}</div>
+                      </div>
+                      <div style="width:36px; height:36px; border-radius: 14px; background:#ECFDF5; display:flex; align-items:center; justify-content:center; font-weight:900; color:#065F46;">★</div>
+                    </div>
+                  </div>
+
+                  <div style="border:1px solid #E5E7EB; border-radius: 16px; padding: 16px; background:#FFFFFF; page-break-inside: avoid;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                      <div>
+                        <div style="font-size:12px; font-weight:900; color:#6B7280;">Average Daily Spending</div>
+                        <div style="font-size:26px; font-weight:1000; color:#10B981; margin-top: 8px;">${formatCurrency(averageDailySpending, currency)}</div>
+                      </div>
+                      <div style="width:36px; height:36px; border-radius: 14px; background:#ECFDF5; display:flex; align-items:center; justify-content:center; font-weight:900; color:#065F46;">⏱</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CATEGORY DISTRIBUTION + DONUT -->
+                <div style="border:1px solid #E5E7EB; border-radius: 16px; padding: 16px; background:#FFFFFF; page-break-inside: avoid;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap: 10px; flex-wrap:wrap;">
+                    <div>
+                      <div style="font-size:14px; font-weight:1000; color:#111827;">Category Distribution</div>
+                      <div style="font-size:12px; font-weight:800; color:#6B7280; margin-top:4px;">Category + amount</div>
+                    </div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:18px; margin-top: 14px; page-break-inside: avoid;">
+                    <div style="flex:0 0 240px; display:flex; align-items:center; justify-content:center; border:1px solid #E5E7EB; border-radius: 16px; padding: 8px; background: linear-gradient(180deg, #ECFDF5 0%, #FFFFFF 70%); page-break-inside: avoid;">
+                      ${donut}
+                    </div>
+                    <div style="flex:1; page-break-inside: avoid;">
+                      ${categoryCard}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TRANSACTIONS -->
+                <div style="border:1px solid #E5E7EB; border-radius: 16px; padding: 16px; background:#FFFFFF;">
+                  <div style="font-size:14px; font-weight:1000; color:#111827;">Transactions</div>
+                  <div style="font-size:12px; font-weight:800; color:#6B7280; margin-top:4px;">Latest expenses first • unlimited rows supported</div>
+
+                  <table style="width:100%; border-collapse:collapse; margin-top: 6px;">
+                    <thead>
+                      <tr>
+                        <th style="text-align:left; padding:10px 12px; font-size:12px; color:#6B7280; border-bottom:1px solid #E5E7EB;">Date</th>
+                        <th style="text-align:left; padding:10px 12px; font-size:12px; color:#6B7280; border-bottom:1px solid #E5E7EB;">Category</th>
+                        <th style="text-align:right; padding:10px 12px; font-size:12px; color:#6B7280; border-bottom:1px solid #E5E7EB;">Amount</th>
+                        <th style="text-align:left; padding:10px 12px; font-size:12px; color:#6B7280; border-bottom:1px solid #E5E7EB;">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${transactionsTableRows || '<tr><td colspan="4" style="padding:16px; font-weight:800; color:#6B7280;">No transactions available</td></tr>'}
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+
+              <!-- FOOTER -->
+              <div style="margin-top: 18px; padding: 18px 12px; text-align:center; color:#6B7280; page-break-inside: avoid;">
+                <div style="font-size:14px; font-weight:1000; color:#111827;">Thank you for using WalTrack!</div>
+                <div style="font-size:12px; font-weight:900; margin-top:6px;">Track smarter. Spend wiser.</div>
+              </div>
+            </div>
           </body>
         </html>
       `;
